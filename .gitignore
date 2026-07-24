@@ -1,0 +1,16 @@
+# --- Secrets — niemals echte Werte committen ---
+.env
+.env.*
+!.env.example
+
+# --- Build-Output ---
+/arkserver-panel
+/arkserver-panel.exe
+/panel
+
+# --- Editor / OS ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
