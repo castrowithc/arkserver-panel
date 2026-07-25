@@ -18,7 +18,7 @@ func fakeDocker(t *testing.T, handler http.HandlerFunc) (dockerConfig, *[]string
 		handler(w, r)
 	}))
 	t.Cleanup(srv.Close)
-	return dockerConfig{host: srv.URL, container: "ark", timeout: 2 * time.Second}, &seen
+	return dockerConfig{host: srv.URL, container: "ark", timeout: 2 * time.Second, stopTimeout: 4 * time.Second}, &seen
 }
 
 func TestDockerState(t *testing.T) {
@@ -109,6 +109,23 @@ func TestDockerStartStopPaths(t *testing.T) {
 		if (*seen)[i] != w {
 			t.Errorf("want %q, got %q", w, (*seen)[i])
 		}
+	}
+}
+
+// Docker answers the stop call only when the container is down, and the server saves and backs up
+// on the way out. A stop that outlives the poll budget must still succeed, or the panel reports a
+// failure for an action that worked (seen on the live server: HTTP 502, container exited cleanly).
+func TestDockerStopOutlivesPollTimeout(t *testing.T) {
+	cfg, _ := fakeDocker(t, func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(150 * time.Millisecond)
+		w.WriteHeader(http.StatusNoContent)
+	})
+	cfg.timeout = 40 * time.Millisecond
+	if err := cfg.stop(); err != nil {
+		t.Fatalf("stop should use the longer budget: %v", err)
+	}
+	if _, err := cfg.state(); err == nil {
+		t.Error("the poll budget should still be the short one, but a slow answer passed")
 	}
 }
 

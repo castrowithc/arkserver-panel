@@ -17,6 +17,9 @@ type dockerConfig struct {
 	host      string
 	container string
 	timeout   time.Duration
+	// stopTimeout is the budget for the stop call alone, which is a different kind of wait than a
+	// status poll: see stop below.
+	stopTimeout time.Duration
 }
 
 func (c dockerConfig) configured() bool { return c.host != "" && c.container != "" }
@@ -131,6 +134,10 @@ func (d dockerConfig) start() error {
 	return d.do(http.MethodPost, "/containers/"+d.container+"/start", nil)
 }
 
+// stop asks Docker to shut the container down. Docker answers only once it is really down, and the
+// server saves and backs up on the way out, so this call runs far longer than any status poll. With
+// the poll budget the panel reported a failure while the stop was quietly succeeding.
 func (d dockerConfig) stop() error {
+	d.timeout = d.stopTimeout
 	return d.do(http.MethodPost, "/containers/"+d.container+"/stop", nil)
 }

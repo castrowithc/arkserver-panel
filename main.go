@@ -62,6 +62,9 @@ func loadConfig() config {
 			container: envOr("ARK_CONTAINER", "ark_server"),
 			// The stats call samples twice internally, so it is never instant.
 			timeout: 10 * time.Second,
+			// The stop is the one call that waits for the server itself, not just for Docker, so it
+			// gets the budget the compose file grants the shutdown (stop_grace_period).
+			stopTimeout: 5 * time.Minute,
 		},
 	}
 }
