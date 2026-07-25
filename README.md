@@ -2,32 +2,65 @@
 
 Optionale, self-hosted Web-UI zum Verwalten des gehärteten ARK: Survival Evolved Servers
 ([`arkserver`](https://github.com/castrowithc/arkserver)). Komplett in Go, server-gerendert, ein
-Admin-Login, LAN-only. Kein SaaS, ein Server pro Deployment.
+Admin-Login, LAN-only. Kein SaaS, ein Server pro Deployment, und nie verpflichtend: wer will,
+bearbeitet die Dateien weiter direkt.
 
-**Status:** v1 in Arbeit, Phase 1 (Skeleton). Noch keine Features, nur der abgesicherte Server-Rahmen.
+**Status:** v1. Am laufenden Server abgenommen.
 
-## Quickstart
+## Was es kann
+- **Monitor:** Zustand, Healthcheck, CPU, RAM gegen das Limit, Spielerliste, installierter
+  Steam-Build. Aktualisiert sich selbst.
+- **Lifecycle:** Neu starten (RCON, mit Speichern), Stoppen und Starten.
+- **Dateien:** Roh-Editor für `GameUserSettings.ini` und `Game.ini`. Nach dem Speichern erinnert das
+  Panel daran, dass die Änderung erst mit einem Neustart greift.
+- **Logs:** read-only, jeweils das Ende der Datei.
+- **`.env`:** read-only, Passwortwerte maskiert.
+
+Bewusst nicht drin: generiertes Einstellungs-Formular, schreibende `.env`, Mods-Browser, geplante
+Neustarts, Backup-Manager.
+
+## Betrieb
+Im Deployment steckt der Dienst im Compose-Profil `panel`, zusammen mit einem pfadgefilterten
+Socket-Proxy, und ist standardmäßig aus:
+
 ```bash
-cp .env.example .env    # PANEL_USER / PANEL_PASS setzen
-docker build -t arkserver-panel .
-docker run --rm -p 127.0.0.1:8080:8080 \
-  -e PANEL_ADDR=0.0.0.0:8080 -e PANEL_USER=admin -e PANEL_PASS=... arkserver-panel
+docker compose --profile panel up -d panel socket-proxy
 ```
+
+Einzeln, etwa zum Ausprobieren:
+
+```bash
+docker run --rm -p 127.0.0.1:8080:8080 \
+  -e PANEL_ADDR=0.0.0.0:8080 -e PANEL_USER=admin -e PANEL_PASS=... \
+  ghcr.io/castrowithc/arkserver-panel:0.1.1
+```
+
 Ohne Docker (Go 1.23+): `PANEL_USER=admin PANEL_PASS=... go run .`
 
 ## Konfiguration
 Alles über Umgebungsvariablen (`.env.example`):
-- `PANEL_ADDR` — Bind-Adresse (Default `127.0.0.1:8080`; im Container `0.0.0.0:8080`).
-- `PANEL_USER` / `PANEL_PASS` — Admin-Credential (Basic Auth), Pflicht.
+
+| Variable | Bedeutung |
+|---|---|
+| `PANEL_ADDR` | Bind-Adresse (Default `127.0.0.1:8080`, im Container `0.0.0.0:8080`). |
+| `PANEL_USER` / `PANEL_PASS` | Admin-Credential (Basic Auth). **Pflicht**, sonst startet das Panel nicht. |
+| `ARK_RCON_ADDR` / `ARK_ADMIN_PASSWORD` | RCON für Spielerliste und Neustart. |
+| `ARK_DOCKER_HOST` / `ARK_CONTAINER` | Socket-Proxy und Containername für CPU, RAM, Start und Stopp. |
+| `ARK_DATA_DIR` / `ARK_ENV_DIR` | Server-Volume und das Verzeichnis mit der `.env`. |
+
+Fehlt eine der optionalen Quellen, blendet das Panel aus, was sie braucht, und schreibt den Grund auf
+die Seite, statt den Dienst zu verweigern.
 
 ## Sicherheit
 Basic Auth ist das Gate. Über reines HTTP wird das Credential nur base64-kodiert übertragen, daher
-**nur im vertrauenswürdigen LAN** betreiben; Remote-Zugang über VPN. Internet-Exposition/HTTPS kommt
-als eigener späterer Schritt.
+**nur im vertrauenswürdigen LAN** betreiben; Remote-Zugang über VPN. Der Docker-Socket wird nie ins
+Panel gemountet: Zugriff läuft ausschließlich über den Proxy, der auf wenige Pfade des
+Server-Containers begrenzt ist.
 
-## Steuerung & Doku
-Planung, Backlog und Design liegen im Schwester-Repo
-[`arkserver-ops`](https://github.com/castrowithc/arkserver-ops) (`docs/panel/`, Backlog-Projekt `panel`).
+## Bauen und Veröffentlichen
+CI baut das Image, prüft `go vet` und Tests, verlangt Digest-Pins für alle Basis-Images, scannt mit
+Trivy (rot bei CRITICAL) und startet das gebaute Image zur Probe, bevor irgendetwas nach GHCR geht.
+Ein Tag `vX.Y.Z` veröffentlicht `X.Y.Z`, `X.Y` und `latest` samt Release; `main` schiebt `edge`.
 
 ## Lizenz
 [MIT](./LICENSE) © 2026 Christian Castro.
