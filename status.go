@@ -23,13 +23,20 @@ type serverStatus struct {
 	// CanStartStop tells the page whether to offer the container actions at all, rather than
 	// showing buttons that are guaranteed to fail.
 	CanStartStop bool
-	Notices      []string
+	// PendingRestart marks config edits that are saved but not yet in effect. It rides along on the
+	// monitor so the reminder is visible from wherever the operator happens to be looking.
+	PendingRestart bool
+	Notices        []string
 }
 
 // gatherStatus asks every source independently and degrades per source. A server that is down must
 // still render a page that says so, so nothing here turns a failed lookup into a failed request.
 func gatherStatus(cfg config) serverStatus {
-	st := serverStatus{Lifecycle: "unbekannt", Label: "unbekannt", CPUPercent: "-", MemUsed: "-", MemLimit: "-", Build: "-"}
+	st := serverStatus{
+		Lifecycle: "unbekannt", Label: "unbekannt",
+		CPUPercent: "-", MemUsed: "-", MemLimit: "-", Build: "-",
+		PendingRestart: cfg.pending.get(),
+	}
 
 	dockerOK := cfg.docker.configured()
 	st.CanStartStop = dockerOK

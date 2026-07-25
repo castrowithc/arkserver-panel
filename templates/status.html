@@ -45,6 +45,13 @@
   </div>
 </div>
 
+{{if .PendingRestart}}
+<div class="flash pending">
+  Gespeicherte Änderungen an den Konfigurationsdateien sind noch nicht in Kraft. Sie greifen mit dem
+  nächsten Neustart; bis dahin kann der laufende Server sie überschreiben.
+</div>
+{{end}}
+
 {{if .Notices}}
 <ul class="notices">
   {{range .Notices}}<li>{{.}}</li>{{end}}

@@ -13,6 +13,15 @@ import (
 // socket rather than against a hand-rolled mock of itself. authOK false makes the server reject the
 // password the way a real one does, with id -1. replies answers commands by exact match.
 func fakeRCON(t *testing.T, authOK bool, replies map[string]string) string {
+	return serveRCON(t, authOK, func(cmd string) string { return replies[cmd] })
+}
+
+// fakeRCONFunc answers through a callback, so a test can record what was asked of the server.
+func fakeRCONFunc(t *testing.T, reply func(cmd string) string) string {
+	return serveRCON(t, true, reply)
+}
+
+func serveRCON(t *testing.T, authOK bool, reply func(cmd string) string) string {
 	t.Helper()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -20,26 +29,32 @@ func fakeRCON(t *testing.T, authOK bool, replies map[string]string) string {
 	}
 	t.Cleanup(func() { ln.Close() })
 
+	// Serve every connection, not just the first: the panel opens a fresh one per operation, so a
+	// single-shot fake would hang the second caller instead of answering it.
 	go func() {
-		conn, err := ln.Accept()
-		if err != nil {
-			return
-		}
-		defer conn.Close()
 		for {
-			id, typ, body, err := readPacket(conn)
+			conn, err := ln.Accept()
 			if err != nil {
 				return
 			}
-			switch typ {
-			case rconAuth:
-				if !authOK {
-					id = -1
+			go func() {
+				defer conn.Close()
+				for {
+					id, typ, body, err := readPacket(conn)
+					if err != nil {
+						return
+					}
+					switch typ {
+					case rconAuth:
+						if !authOK {
+							id = -1
+						}
+						writePacket(conn, id, rconAuthResponse, "")
+					case rconExecCommand:
+						writePacket(conn, id, rconResponseValue, reply(body))
+					}
 				}
-				writePacket(conn, id, rconAuthResponse, "")
-			case rconExecCommand:
-				writePacket(conn, id, rconResponseValue, replies[body])
-			}
+			}()
 		}
 	}()
 	return ln.Addr().String()

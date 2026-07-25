@@ -16,6 +16,12 @@ type filePage struct {
 	Lines    int
 	Flash    string
 	Failed   bool
+	// Pending drives the reminder that an edit is saved but not yet in effect, and with it the
+	// offer to restart right here.
+	Pending bool
+	// CanRestart is false without an RCON credential, in which case the panel must not offer a
+	// restart it cannot perform.
+	CanRestart bool
 }
 
 // withExistence marks the files that are actually present. The list files from the reference
@@ -41,8 +47,16 @@ func selected(entries []fileEntry, id string) fileEntry {
 func filesHandler(cfg config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		entries := withExistence(configFiles(cfg))
-		page := filePage{Files: entries, Selected: selected(entries, r.URL.Query().Get("f"))}
-		if r.URL.Query().Get("saved") == "1" {
+		page := filePage{
+			Files:      entries,
+			Selected:   selected(entries, r.URL.Query().Get("f")),
+			Pending:    cfg.pending.get(),
+			CanRestart: cfg.rcon.configured(),
+		}
+		switch {
+		case r.URL.Query().Get("restarted") == "1":
+			page.Flash = "Gespeichert, der Server startet neu."
+		case r.URL.Query().Get("saved") == "1":
 			page.Flash = "Gespeichert."
 		}
 
@@ -77,6 +91,22 @@ func saveFileHandler(cfg config) http.HandlerFunc {
 		}
 		if err := saveTextFile(entry.Path, r.FormValue("content")); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		cfg.pending.set()
+
+		// Opt-in, off unless the operator ticked the box: a save that takes the server down for
+		// several minutes without being asked for would be a nasty surprise, particularly with
+		// players connected.
+		if r.FormValue("restart") == "1" && cfg.rcon.configured() {
+			if err := restartServer(cfg.rcon); err != nil {
+				// The file is written either way, so report the failed restart without pretending
+				// the save did not happen.
+				http.Error(w, "gespeichert, aber der Neustart schlug fehl: "+err.Error(), http.StatusBadGateway)
+				return
+			}
+			cfg.pending.clear()
+			http.Redirect(w, r, "/files?f="+entry.ID+"&restarted=1", http.StatusSeeOther)
 			return
 		}
 		// Redirect rather than render, so a reload does not save again.

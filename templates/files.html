@@ -14,15 +14,45 @@
 
   {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
 
+  {{if .Pending}}
+    <div class="flash pending">
+      <div>
+        Gespeicherte Änderungen sind noch nicht in Kraft. Sie greifen mit dem nächsten Neustart; bis
+        dahin kann der laufende Server sie überschreiben.
+      </div>
+      {{if .CanRestart}}
+        <form method="post" action="/restart" class="actions"
+              onsubmit="return confirm('Server jetzt neu starten? Er ist dann rund vier bis fünf Minuten nicht erreichbar.')">
+          <button type="submit">Jetzt neu starten</button>
+          <span class="muted">rund vier bis fünf Minuten nicht erreichbar</span>
+        </form>
+      {{end}}
+    </div>
+  {{end}}
+
   {{if .Selected.Editable}}
     <form method="post" action="/files/save">
       <input type="hidden" name="f" value="{{.Selected.ID}}">
       <textarea name="content" spellcheck="false">{{.Content}}</textarea>
       <div class="actions">
         <button type="submit">Speichern</button>
-        <span class="muted">Änderungen greifen nach einem Serverneustart.</span>
+        {{if .CanRestart}}
+          <label class="muted">
+            <input type="checkbox" name="restart" value="1" id="autorestart">
+            nach dem Speichern automatisch neu starten
+          </label>
+        {{end}}
       </div>
     </form>
+    <script>
+      // Remember the choice per browser. Deliberately not a server-side setting: it is a habit of
+      // whoever is sitting here, not a property of the deployment, and it starts off.
+      const box = document.getElementById("autorestart");
+      if (box) {
+        box.checked = localStorage.getItem("autorestart") === "1";
+        box.addEventListener("change", () => localStorage.setItem("autorestart", box.checked ? "1" : "0"));
+      }
+    </script>
   {{else}}
     <textarea readonly spellcheck="false">{{.Content}}</textarea>
     <p class="hint">

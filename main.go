@@ -30,6 +30,8 @@ type config struct {
 	envDir string
 	rcon   rconConfig
 	docker dockerConfig
+	// pending carries the "edited, not yet restarted" marker across requests.
+	pending *restartFlag
 }
 
 func loadConfig() config {
@@ -39,6 +41,7 @@ func loadConfig() config {
 		pass:    os.Getenv("PANEL_PASS"),
 		dataDir: envOr("ARK_DATA_DIR", "/data"),
 		envDir:  envOr("ARK_ENV_DIR", "/deploy"),
+		pending: &restartFlag{},
 		rcon: rconConfig{
 			// Default to the compose service alias rather than the container name, which carries
 			// COMPOSE_PROJECT_NAME and therefore changes with the deployment.
@@ -161,7 +164,14 @@ func newRouter(cfg config) http.Handler {
 	app.HandleFunc("/files", filesHandler(cfg))
 	app.HandleFunc("/files/save", saveFileHandler(cfg))
 	app.HandleFunc("/logs", logsHandler(cfg))
-	app.HandleFunc("/restart", action(func() error { return restartServer(cfg.rcon) }))
+	app.HandleFunc("/restart", action(func() error {
+		if err := restartServer(cfg.rcon); err != nil {
+			return err
+		}
+		// The edits are in effect from here on, so the reminder has done its job.
+		cfg.pending.clear()
+		return nil
+	}))
 	app.HandleFunc("/start", action(cfg.docker.start))
 	app.HandleFunc("/stop", action(cfg.docker.stop))
 
