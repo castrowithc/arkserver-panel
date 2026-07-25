@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="de">
+<head>{{template "head" .}}</head>
+<body>
+  <h1>arkserver-panel</h1>
+  {{template "nav" "logs"}}
+
+  <div class="tabs">
+    {{range .Files}}
+      <a href="/logs?f={{.ID}}"
+         class="{{if eq .ID $.Selected.ID}}active{{end}} {{if not .Exists}}missing{{end}}">{{.Label}}</a>
+    {{end}}
+  </div>
+
+  {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
+
+  <pre class="log" id="log">{{.Content}}</pre>
+  <p class="hint">Letzte {{.Lines}} Zeilen, aktualisiert sich alle 10 Sekunden.</p>
+
+  <script>
+    // Keep the view pinned to the newest lines unless the reader has scrolled up to look at
+    // something, in which case yanking them back to the bottom would be rude.
+    const log = document.getElementById("log");
+    const atBottom = () => log.scrollHeight - log.scrollTop - log.clientHeight < 40;
+    const toBottom = () => { log.scrollTop = log.scrollHeight; };
+    toBottom();
+
+    setInterval(async () => {
+      if (document.hidden) return;
+      try {
+        const stick = atBottom();
+        const url = new URL(location.href);
+        url.searchParams.set("raw", "1");
+        const text = await (await fetch(url)).text();
+        log.textContent = text;
+        if (stick) toBottom();
+      } catch (e) { /* the next tick tries again */ }
+    }, 10000);
+  </script>
+</body>
+</html>

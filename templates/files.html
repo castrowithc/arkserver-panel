@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="de">
+<head>{{template "head" .}}</head>
+<body>
+  <h1>arkserver-panel</h1>
+  {{template "nav" "files"}}
+
+  <div class="tabs">
+    {{range .Files}}
+      <a href="/files?f={{.ID}}"
+         class="{{if eq .ID $.Selected.ID}}active{{end}} {{if not .Exists}}missing{{end}}">{{.Label}}</a>
+    {{end}}
+  </div>
+
+  {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
+
+  {{if .Selected.Editable}}
+    <form method="post" action="/files/save">
+      <input type="hidden" name="f" value="{{.Selected.ID}}">
+      <textarea name="content" spellcheck="false">{{.Content}}</textarea>
+      <div class="actions">
+        <button type="submit">Speichern</button>
+        <span class="muted">Änderungen greifen nach einem Serverneustart.</span>
+      </div>
+    </form>
+  {{else}}
+    <textarea readonly spellcheck="false">{{.Content}}</textarea>
+    <p class="hint">
+      Nur lesend. Werte aus dieser Datei werden beim Erzeugen des Containers festgeschrieben, ein
+      Serverneustart übernimmt sie also nicht; dafür braucht es <code>docker compose up -d</code> auf
+      dem Host. Passwörter sind ausgeblendet.
+    </p>
+  {{end}}
+</body>
+</html>

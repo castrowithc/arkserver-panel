@@ -22,11 +22,14 @@ type config struct {
 	addr string
 	user string
 	pass string
-	// dataDir is the server volume, mounted read-write: the app manifest is read from it now, the
-	// INIs get edited through it in a later phase.
+	// dataDir is the server volume, mounted read-write: the app manifest and the INIs live here.
 	dataDir string
-	rcon    rconConfig
-	docker  dockerConfig
+	// envDir holds the deployment's .env, shown read-only. Mounted as a directory rather than as
+	// the single file: a single-file mount pins an inode, so a host-side editor that replaces the
+	// file on save would leave the panel showing the old content forever.
+	envDir string
+	rcon   rconConfig
+	docker dockerConfig
 }
 
 func loadConfig() config {
@@ -35,6 +38,7 @@ func loadConfig() config {
 		user:    os.Getenv("PANEL_USER"),
 		pass:    os.Getenv("PANEL_PASS"),
 		dataDir: envOr("ARK_DATA_DIR", "/data"),
+		envDir:  envOr("ARK_ENV_DIR", "/deploy"),
 		rcon: rconConfig{
 			// Default to the compose service alias rather than the container name, which carries
 			// COMPOSE_PROJECT_NAME and therefore changes with the deployment.
@@ -154,6 +158,9 @@ func newRouter(cfg config) http.Handler {
 	app := http.NewServeMux()
 	app.HandleFunc("/", index(cfg))
 	app.HandleFunc("/status", statusFragment(cfg))
+	app.HandleFunc("/files", filesHandler(cfg))
+	app.HandleFunc("/files/save", saveFileHandler(cfg))
+	app.HandleFunc("/logs", logsHandler(cfg))
 	app.HandleFunc("/restart", action(func() error { return restartServer(cfg.rcon) }))
 	app.HandleFunc("/start", action(cfg.docker.start))
 	app.HandleFunc("/stop", action(cfg.docker.stop))

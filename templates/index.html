@@ -1,40 +1,9 @@
 <!doctype html>
 <html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>arkserver-panel</title>
-  <style>
-    :root { color-scheme: light dark; --line: #8883; --muted: #8888; }
-    body { font: 16px/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 60rem; padding: 1.5rem; }
-    h1 { font-size: 1.25rem; margin: 0 0 1rem; }
-    h2 { font-size: .8rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
-         color: var(--muted); margin: 0 0 .5rem; }
-    .bar { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
-           border: 1px solid var(--line); border-radius: .5rem; padding: .75rem 1rem; }
-    .spacer { flex: 1 }
-    .inline { display: inline }
-    button { font: inherit; padding: .4rem .9rem; border: 1px solid var(--line);
-             border-radius: .35rem; background: transparent; color: inherit; cursor: pointer; }
-    button:disabled { opacity: .4; cursor: not-allowed; }
-    .dot { width: .7rem; height: .7rem; border-radius: 50%; background: var(--muted); }
-    .dot.laeuft { background: #2e9e4f } .dot.startet { background: #d38b1a }
-    .dot.gestoppt { background: #b3402f } .dot.unbekannt { background: var(--muted) }
-    .grid { display: grid; gap: 1rem; margin-top: 1rem;
-            grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
-    .card { border: 1px solid var(--line); border-radius: .5rem; padding: 1rem; }
-    .figure { font-size: 2rem; margin: 0; line-height: 1.1; }
-    .figure.small { font-size: 1.4rem }
-    .unit { font-size: .8rem; color: var(--muted); margin-left: .4rem; }
-    .muted { color: var(--muted) }
-    .meter { height: .4rem; border-radius: .2rem; background: var(--line); margin-top: .6rem; }
-    .meter span { display: block; height: 100%; border-radius: .2rem; background: #2e9e4f; }
-    .players { margin: .5rem 0 0; padding-left: 1.1rem; font-size: .9rem; }
-    .notices { margin: 1rem 0 0; padding-left: 1.1rem; font-size: .9rem; color: var(--muted); }
-  </style>
-</head>
+<head>{{template "head" .}}</head>
 <body>
   <h1>arkserver-panel</h1>
+  {{template "nav" "monitor"}}
   <div id="status">{{template "status" .}}</div>
 
   <script>

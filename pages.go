@@ -1,0 +1,111 @@
+package main
+
+import (
+	"net/http"
+	"os"
+)
+
+// tailLines is what the log viewer shows. Enough to cover a start-up sequence, short enough to
+// render without thought.
+const tailLines = 300
+
+type filePage struct {
+	Files    []fileEntry
+	Selected fileEntry
+	Content  string
+	Lines    int
+	Flash    string
+	Failed   bool
+}
+
+// withExistence marks the files that are actually present. The list files from the reference
+// deployment may be absent, a game log only exists once it is switched on, so the picker shows them
+// greyed rather than pretending they are there or hiding them and raising the question where they
+// went.
+func withExistence(entries []fileEntry) []fileEntry {
+	for i, e := range entries {
+		if _, err := os.Stat(e.Path); err == nil {
+			entries[i].Exists = true
+		}
+	}
+	return entries
+}
+
+func selected(entries []fileEntry, id string) fileEntry {
+	if e, ok := findFile(entries, id); ok {
+		return e
+	}
+	return entries[0]
+}
+
+func filesHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		entries := withExistence(configFiles(cfg))
+		page := filePage{Files: entries, Selected: selected(entries, r.URL.Query().Get("f"))}
+		if r.URL.Query().Get("saved") == "1" {
+			page.Flash = "Gespeichert."
+		}
+
+		content, err := readTextFile(page.Selected.Path)
+		switch {
+		case err != nil:
+			page.Flash, page.Failed = "Datei nicht lesbar: "+err.Error(), true
+		case page.Selected.Secret:
+			page.Content = maskSecrets(content)
+		default:
+			page.Content = content
+		}
+		render(w, "files.html", page)
+	}
+}
+
+func saveFileHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if !sameOrigin(r) {
+			http.Error(w, "cross-site request rejected", http.StatusForbidden)
+			return
+		}
+		entry, ok := findFile(configFiles(cfg), r.FormValue("f"))
+		if !ok || !entry.Editable {
+			http.Error(w, "not an editable file", http.StatusForbidden)
+			return
+		}
+		if err := saveTextFile(entry.Path, r.FormValue("content")); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Redirect rather than render, so a reload does not save again.
+		http.Redirect(w, r, "/files?f="+entry.ID+"&saved=1", http.StatusSeeOther)
+	}
+}
+
+func logsHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		entries := withExistence(logFiles(cfg))
+		page := filePage{
+			Files:    entries,
+			Selected: selected(entries, r.URL.Query().Get("f")),
+			Lines:    tailLines,
+		}
+
+		content, err := tailFile(page.Selected.Path, tailLines)
+		if err != nil {
+			page.Flash, page.Failed = "Log nicht lesbar: "+err.Error(), true
+		}
+		page.Content = content
+
+		// The periodic refresh asks for the text alone, so it can swap the contents without
+		// re-rendering the page around it.
+		if r.URL.Query().Get("raw") == "1" {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.Write([]byte(content))
+			return
+		}
+		render(w, "logs.html", page)
+	}
+}
