@@ -1,0 +1,162 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Billig und schnell, deshalb vorgeschaltet: was hier rot wird, muss gar nicht erst gebaut werden.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Vet und Tests
+        # Go bringt der Runner mit; eine eigene Toolchain-Action waere hier nur Ballast. Gebaut wird
+        # das Image ohnehin mit der gepinnten Builder-Stufe aus dem Dockerfile.
+        run: |
+          go version
+          go vet ./...
+          go test ./...
+
+      - name: Basis-Images sind per Digest gepinnt
+        # Multi-Stage: es muss JEDE FROM-Zeile gepinnt sein, nicht nur eine.
+        run: |
+          total=$(grep -cE '^FROM[[:space:]]' Dockerfile)
+          pinned=$(grep -cE '^FROM[[:space:]]+[^[:space:]]+@sha256:[0-9a-f]{64}' Dockerfile)
+          if [ "$total" != "$pinned" ]; then
+            echo "::error file=Dockerfile::$pinned von $total FROM-Zeilen sind per @sha256-Digest gepinnt"
+            exit 1
+          fi
+          echo "Digest-Pin OK:"; grep -E '^FROM' Dockerfile
+
+  build-scan:
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write         # GitHub-Release bei Tag-Push
+      packages: write         # GHCR-Push (main + Version-Tags)
+      security-events: write  # SARIF-Upload in den Security-Tab (public Repo)
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}   # metadata-action lowercased automatisch
+      SCAN_TAG: localbuild/arkserver-panel:scan
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE }}
+          # :X.Y.Z + :X.Y bei Version-Tags, :latest folgt via Default-flavor den Releases;
+          # :edge = Spitze von main; :sha-<short> je Commit.
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=edge,branch=main
+            type=sha,format=short
+
+      # Bauen + lokal laden (load) fuer Scan und Rauchtest; noch KEIN Push.
+      - name: Build image (load for scan)
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: .
+          load: true
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ${{ env.SCAN_TAG }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 1) Report (immer gruen) -> SARIF fuer den Security-Tab (public Repo).
+      - name: Trivy scan (SARIF report)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.SCAN_TAG }}
+          scan-type: image
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
+      - name: Upload SARIF to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4.36.3
+        with:
+          sarif_file: trivy-results.sarif
+
+      # 2) Gate — Table ins Log + bei CRITICAL rot (unfixed CVEs ignoriert).
+      - name: Trivy gate (fail on CRITICAL)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.SCAN_TAG }}
+          scan-type: image
+          format: table
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+      # 2b) Rauchtest — das Image muss startfaehig sein, nicht nur bauen und scannen. Beim Server-Repo
+      #     fehlte genau das, weshalb ein nicht startbares Image bis in ein Release kam. Das
+      #     distroless-Image hat keine Shell, der Test laeuft deshalb von aussen ueber HTTP.
+      - name: Smoke test (Image startet und antwortet)
+        run: |
+          docker run -d --name smoke -p 127.0.0.1:8080:8080 \
+            -e PANEL_ADDR=0.0.0.0:8080 -e PANEL_USER=ci -e PANEL_PASS=ci \
+            '${{ env.SCAN_TAG }}' >/dev/null
+          for _ in $(seq 1 15); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8080/healthz; then up=1; break; fi
+            [ "$(docker inspect -f '{{.State.Running}}' smoke)" = true ] || break
+            sleep 1
+          done
+          # Ohne Volume und ohne RCON meldet die Seite fehlende Quellen, rendern muss sie trotzdem.
+          # Und das Auth-Gate gehoert mitgeprueft: ohne Credential 401, mit Credential 200.
+          if [ "${up:-}" = 1 ]; then
+            anon=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/)
+            auth=$(curl -s -o /dev/null -w '%{http_code}' -u ci:ci http://127.0.0.1:8080/)
+          fi
+          docker logs smoke 2>&1 | head -20
+          docker rm -f smoke >/dev/null
+          [ "${up:-}" = 1 ] || { echo "Panel antwortet nicht auf /healthz"; exit 1; }
+          [ "$anon" = 401 ] || { echo "ohne Credential kam $anon statt 401"; exit 1; }
+          [ "$auth" = 200 ] || { echo "mit Credential kam $auth statt 200"; exit 1; }
+          echo "Rauchtest OK: startet, /healthz antwortet, Auth-Gate steht"
+
+      # 3) Nur bei Push-Event (main-Branch oder Version-Tag), nach gruenem Gate: nach GHCR pushen.
+      #    Cache-Hit -> praktisch nur Push, kein Rebuild. PRs pushen nicht.
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push to GHCR
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 4) Bei Version-Tag (vX.Y.Z): GitHub-Release mit auto-generierten Notes.
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes
