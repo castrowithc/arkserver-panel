@@ -1,0 +1,53 @@
+{{define "status"}}
+<div class="bar">
+  <span class="dot {{.Lifecycle}}"></span>
+  <strong>{{.Label}}</strong>
+  {{if .Health}}<span class="muted">Healthcheck: {{.Health}}</span>{{end}}
+  <span class="spacer"></span>
+  <form method="post" action="/restart" class="inline"
+        onsubmit="return confirm('Server neu starten? Der Server ist rund vier bis fünf Minuten nicht erreichbar.')">
+    <button type="submit" {{if not .PlayersKnown}}disabled{{end}}>Neu starten</button>
+  </form>
+  {{if .CanStartStop}}
+    <form method="post" action="/stop" class="inline"
+          onsubmit="return confirm('Server stoppen? Er bleibt aus, bis er hier wieder gestartet wird.')">
+      <button type="submit" {{if eq .Lifecycle "gestoppt"}}disabled{{end}}>Stoppen</button>
+    </form>
+    <form method="post" action="/start" class="inline">
+      <button type="submit" {{if ne .Lifecycle "gestoppt"}}disabled{{end}}>Starten</button>
+    </form>
+  {{end}}
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>CPU</h2>
+    <p class="figure">{{.CPUPercent}}<span class="unit">%</span></p>
+  </div>
+  <div class="card">
+    <h2>RAM</h2>
+    <p class="figure">{{.MemUsed}}<span class="unit">von {{.MemLimit}} GB</span></p>
+    <div class="meter"><span style="width: {{printf "%.0f" .MemPercent}}%"></span></div>
+  </div>
+  <div class="card">
+    <h2>Spieler</h2>
+    {{if .PlayersKnown}}
+      <p class="figure">{{.PlayerCount}}</p>
+      {{if .Players}}<ul class="players">{{range .Players}}<li>{{.}}</li>{{end}}</ul>{{end}}
+    {{else}}
+      <p class="figure muted">-</p>
+    {{end}}
+  </div>
+  <div class="card">
+    <h2>Version</h2>
+    <p class="figure small">{{.Build}}</p>
+    <p class="unit">Steam-Build</p>
+  </div>
+</div>
+
+{{if .Notices}}
+<ul class="notices">
+  {{range .Notices}}<li>{{.}}</li>{{end}}
+</ul>
+{{end}}
+{{end}}

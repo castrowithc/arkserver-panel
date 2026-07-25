@@ -69,6 +69,26 @@ func writePacket(w io.Writer, id, typ int32, body string) {
 	w.Write(pkt)
 }
 
+// silentListener accepts a connection and then never says anything, the way ARK behaves while it
+// reloads its world.
+func silentListener(t *testing.T) string {
+	t.Helper()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	t.Cleanup(func() { ln.Close() })
+	go func() {
+		conn, err := ln.Accept()
+		if err != nil {
+			return
+		}
+		<-make(chan struct{}) // hold the connection open until the test ends
+		conn.Close()
+	}()
+	return ln.Addr().String()
+}
+
 func testConfig(addr string) rconConfig {
 	return rconConfig{
 		addr: addr, pass: "secret",
@@ -120,21 +140,7 @@ func TestDialFailure(t *testing.T) {
 // budget has to cover the whole exchange: without an absolute deadline the silent auth and the
 // silent command would each get the full wait and double it.
 func TestStatusGivesUpOnASilentServer(t *testing.T) {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("listen: %v", err)
-	}
-	t.Cleanup(func() { ln.Close() })
-	go func() {
-		conn, err := ln.Accept()
-		if err != nil {
-			return
-		}
-		defer conn.Close()
-		select {} // accept, then never answer
-	}()
-
-	cfg := testConfig(ln.Addr().String())
+	cfg := testConfig(silentListener(t))
 	cfg.statusBudget = 300 * time.Millisecond
 	start := time.Now()
 	if _, err := listPlayers(cfg); err == nil {
