@@ -1,7 +1,10 @@
 # Build a static binary, ship it on a minimal nonroot base.
 # Both bases are pinned by digest (index digest, so every architecture still resolves) and the CI
 # fails if any FROM here loses its pin. Renew a pin deliberately, never by following a tag.
-FROM golang:1.23-alpine@sha256:383395b794dffa5b53012a212365d40c8e37109a626ca30d6151c8348d380b5f AS build
+# Der Builder muss auf einer noch gepflegten Go-Linie stehen: die statische Binary traegt ihre
+# stdlib in sich, eine ausgelaufene Linie bekommt keine Fixes mehr und der Trivy-Gate wird rot
+# (1.23 lief so in CVE-2025-68121, crypto/tls).
+FROM golang:1.25-alpine@sha256:56961d79ea8129efddcc0b8643fd8a5416b4e6228cfd477e3fd61deb2672c587 AS build
 WORKDIR /src
 COPY go.mod ./
 COPY . .
