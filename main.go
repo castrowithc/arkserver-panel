@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 //go:embed templates/*.html
@@ -20,13 +21,28 @@ type config struct {
 	addr string
 	user string
 	pass string
+	// dataDir is the server volume, mounted read-write: the app manifest is read from it now, the
+	// INIs get edited through it in a later phase.
+	dataDir string
+	rcon    rconConfig
 }
 
 func loadConfig() config {
 	return config{
-		addr: envOr("PANEL_ADDR", "127.0.0.1:8080"),
-		user: os.Getenv("PANEL_USER"),
-		pass: os.Getenv("PANEL_PASS"),
+		addr:    envOr("PANEL_ADDR", "127.0.0.1:8080"),
+		user:    os.Getenv("PANEL_USER"),
+		pass:    os.Getenv("PANEL_PASS"),
+		dataDir: envOr("ARK_DATA_DIR", "/data"),
+		rcon: rconConfig{
+			// Default to the compose service alias rather than the container name, which carries
+			// COMPOSE_PROJECT_NAME and therefore changes with the deployment.
+			addr: envOr("ARK_RCON_ADDR", "ark:27020"),
+			pass: os.Getenv("ARK_ADMIN_PASSWORD"),
+			// A connect either succeeds at once or the server is unreachable, while SaveWorld on a
+			// large world runs for a good while before it answers.
+			dialTimeout: 5 * time.Second,
+			cmdTimeout:  60 * time.Second,
+		},
 	}
 }
 
@@ -78,6 +94,11 @@ func main() {
 	cfg := loadConfig()
 	if cfg.user == "" || cfg.pass == "" {
 		log.Fatal("PANEL_USER and PANEL_PASS must be set")
+	}
+	// Not fatal: without the RCON credential the panel still serves everything that does not need
+	// the game server, so it degrades instead of refusing to start.
+	if !cfg.rcon.configured() {
+		log.Print("ARK_ADMIN_PASSWORD is unset: the player list and the restart action stay unavailable")
 	}
 	log.Printf("arkserver-panel listening on %s", cfg.addr)
 	if err := http.ListenAndServe(cfg.addr, newRouter(cfg)); err != nil {
