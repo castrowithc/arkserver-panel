@@ -14,21 +14,7 @@
 
   {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
 
-  {{if .Pending}}
-    <div class="flash pending">
-      <div>
-        Gespeicherte Änderungen sind noch nicht in Kraft. Sie greifen mit dem nächsten Neustart; bis
-        dahin kann der laufende Server sie überschreiben.
-      </div>
-      {{if .CanRestart}}
-        <form method="post" action="/restart" class="actions"
-              onsubmit="return confirm('Server jetzt neu starten? Er ist dann rund vier bis fünf Minuten nicht erreichbar.')">
-          <button type="submit">Jetzt neu starten</button>
-          <span class="muted">rund vier bis fünf Minuten nicht erreichbar</span>
-        </form>
-      {{end}}
-    </div>
-  {{end}}
+  {{template "pending" .}}
 
   {{if .Selected.Editable}}
     <form method="post" action="/files/save">

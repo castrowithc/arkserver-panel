@@ -164,6 +164,8 @@ func newRouter(cfg config) http.Handler {
 	app := http.NewServeMux()
 	app.HandleFunc("/", index(cfg))
 	app.HandleFunc("/status", statusFragment(cfg))
+	app.HandleFunc("/settings", settingsHandler(cfg))
+	app.HandleFunc("/settings/save", saveSettingsHandler(cfg))
 	app.HandleFunc("/files", filesHandler(cfg))
 	app.HandleFunc("/files/save", saveFileHandler(cfg))
 	app.HandleFunc("/logs", logsHandler(cfg))

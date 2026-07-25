@@ -11,13 +11,16 @@ bearbeitet die Dateien weiter direkt.
 - **Monitor:** Zustand, Healthcheck, CPU, RAM gegen das Limit, Spielerliste, installierter
   Steam-Build. Aktualisiert sich selbst.
 - **Lifecycle:** Neu starten (RCON, mit Speichern), Stoppen und Starten.
+- **Einstellungen:** erzeugtes Formular über 210 Felder der beiden INIs, gruppiert und filterbar.
+  Ein leeres Feld heißt, dass der Key nicht in der Datei steht, und bleibt beim Speichern auch weg;
+  geschrieben wird nur, was geändert wurde.
 - **Dateien:** Roh-Editor für `GameUserSettings.ini` und `Game.ini`. Nach dem Speichern erinnert das
   Panel daran, dass die Änderung erst mit einem Neustart greift.
 - **Logs:** read-only, jeweils das Ende der Datei.
 - **`.env`:** read-only, Passwortwerte maskiert.
 
-Bewusst nicht drin: generiertes Einstellungs-Formular, schreibende `.env`, Mods-Browser, geplante
-Neustarts, Backup-Manager.
+Bewusst nicht drin: die Stat-Multiplikatoren pro Stufe und die Parameter prozeduraler Karten (ihre
+Key-Namen sind nicht belegt), schreibende `.env`, Mods-Browser, geplante Neustarts, Backup-Manager.
 
 ## Betrieb
 Im Deployment steckt der Dienst im Compose-Profil `panel`, zusammen mit einem pfadgefilterten

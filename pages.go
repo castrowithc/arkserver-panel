@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
+	"strconv"
 )
 
 // tailLines is what the log viewer shows. Enough to cover a start-up sequence, short enough to
@@ -111,6 +112,105 @@ func saveFileHandler(cfg config) http.HandlerFunc {
 		}
 		// Redirect rather than render, so a reload does not save again.
 		http.Redirect(w, r, "/files?f="+entry.ID+"&saved=1", http.StatusSeeOther)
+	}
+}
+
+type settingsPage struct {
+	Groups []settingGroup
+	Fields int
+	// Notices names a file the page could not read, so the greyed-out fields below have a reason.
+	Notices    []string
+	Flash      string
+	Failed     bool
+	Pending    bool
+	CanRestart bool
+}
+
+func newSettingsPage(cfg config, sources map[string]*iniSource, groups []settingGroup) settingsPage {
+	page := settingsPage{
+		Groups:     groups,
+		Pending:    cfg.pending.get(),
+		CanRestart: cfg.rcon.configured(),
+	}
+	for _, g := range groups {
+		page.Fields += len(g.Rows)
+	}
+	for _, src := range sources {
+		if src.err != nil {
+			page.Notices = append(page.Notices, src.entry.Label+" nicht lesbar: "+src.err.Error())
+		}
+	}
+	return page
+}
+
+func settingsHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sources := loadINISources(cfg)
+		page := newSettingsPage(cfg, sources, buildGroups(sources))
+		switch n := r.URL.Query().Get("saved"); {
+		case r.URL.Query().Get("restarted") == "1":
+			page.Flash = "Gespeichert, der Server startet neu."
+		case n == "0":
+			page.Flash = "Nichts zu speichern: die Werte stehen schon so in der Datei."
+		case n != "":
+			page.Flash = n + " Wert(e) gespeichert."
+		}
+		render(w, "settings.html", page)
+	}
+}
+
+func saveSettingsHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if !sameOrigin(r) {
+			http.Error(w, "cross-site request rejected", http.StatusForbidden)
+			return
+		}
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		sources := loadINISources(cfg)
+		groups := buildGroups(sources)
+		changed, ok := applyForm(sources, r.PostForm, groups)
+		if !ok {
+			// Nothing was written. The page comes back with the submitted values and the reasons,
+			// so the operator can correct rather than retype.
+			page := newSettingsPage(cfg, sources, groups)
+			page.Flash, page.Failed = "Nichts gespeichert: bitte die markierten Felder pruefen.", true
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			render(w, "settings.html", page)
+			return
+		}
+
+		for _, src := range sources {
+			if !src.dirty {
+				continue
+			}
+			if err := saveTextFile(src.entry.Path, src.ini.render()); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+		if changed > 0 {
+			cfg.pending.set()
+		}
+
+		if r.FormValue("restart") == "1" && cfg.rcon.configured() {
+			if err := restartServer(cfg.rcon); err != nil {
+				http.Error(w, "gespeichert, aber der Neustart schlug fehl: "+err.Error(), http.StatusBadGateway)
+				return
+			}
+			cfg.pending.clear()
+			http.Redirect(w, r, "/settings?restarted=1", http.StatusSeeOther)
+			return
+		}
+		http.Redirect(w, r, "/settings?saved="+strconv.Itoa(changed), http.StatusSeeOther)
 	}
 }
 
