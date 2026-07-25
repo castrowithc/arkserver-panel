@@ -2,20 +2,22 @@
 <html lang="de">
 <head>{{template "head" .}}</head>
 <body>
-  <h1>arkserver-panel</h1>
-  {{template "nav" "logs"}}
+  {{template "topbar" .Chrome}}
+  <aside class="sidebar">{{template "navlinks" .Chrome.Active}}</aside>
 
-  <div class="tabs">
-    {{range .Files}}
-      <a href="/logs?f={{.ID}}"
-         class="{{if eq .ID $.Selected.ID}}active{{end}} {{if not .Exists}}missing{{end}}">{{.Label}}</a>
-    {{end}}
-  </div>
+  <main>
+    <div class="tabs">
+      {{range .Files}}
+        <a href="/logs?f={{.ID}}"
+           class="{{if eq .ID $.Selected.ID}}active{{end}} {{if not .Exists}}missing{{end}}">{{.Label}}</a>
+      {{end}}
+    </div>
 
-  {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
+    {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
 
-  <pre class="log" id="log">{{.Content}}</pre>
-  <p class="hint">Letzte {{.Lines}} Zeilen, aktualisiert sich alle 10 Sekunden.</p>
+    <pre class="log" id="log">{{.Content}}</pre>
+    <p class="hint">Letzte {{.Lines}} Zeilen, aktualisiert sich alle 10 Sekunden.</p>
+  </main>
 
   <script>
     // Keep the view pinned to the newest lines unless the reader has scrolled up to look at

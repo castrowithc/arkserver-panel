@@ -10,19 +10,29 @@ import (
 // render without thought.
 const tailLines = 300
 
+// pageChrome is what every page needs for the fixed frame around it: which entry of the navigation
+// is current, whether the restart reminder is up, and whether a restart can be offered at all
+// (without an RCON credential the panel must not offer one it cannot perform). SaveForm names the
+// form the head's save button submits, so a page that has no form simply leaves it empty.
+type pageChrome struct {
+	Active     string
+	Pending    bool
+	CanRestart bool
+	SaveForm   string
+}
+
+func newChrome(cfg config, active string) pageChrome {
+	return pageChrome{Active: active, Pending: cfg.pending.get(), CanRestart: cfg.rcon.configured()}
+}
+
 type filePage struct {
+	Chrome   pageChrome
 	Files    []fileEntry
 	Selected fileEntry
 	Content  string
 	Lines    int
 	Flash    string
 	Failed   bool
-	// Pending drives the reminder that an edit is saved but not yet in effect, and with it the
-	// offer to restart right here.
-	Pending bool
-	// CanRestart is false without an RCON credential, in which case the panel must not offer a
-	// restart it cannot perform.
-	CanRestart bool
 }
 
 // withExistence marks the files that are actually present. The list files from the reference
@@ -49,10 +59,9 @@ func filesHandler(cfg config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		entries := withExistence(configFiles(cfg))
 		page := filePage{
-			Files:      entries,
-			Selected:   selected(entries, r.URL.Query().Get("f")),
-			Pending:    cfg.pending.get(),
-			CanRestart: cfg.rcon.configured(),
+			Chrome:   newChrome(cfg, "files"),
+			Files:    entries,
+			Selected: selected(entries, r.URL.Query().Get("f")),
 		}
 		switch {
 		case r.URL.Query().Get("restarted") == "1":
@@ -116,22 +125,22 @@ func saveFileHandler(cfg config) http.HandlerFunc {
 }
 
 type settingsPage struct {
+	Chrome pageChrome
 	Groups []settingGroup
 	Fields int
 	// Notices names a file the page could not read, so the greyed-out fields below have a reason.
-	Notices    []string
-	Flash      string
-	Failed     bool
-	Pending    bool
-	CanRestart bool
+	Notices []string
+	Flash   string
+	Failed  bool
 }
 
+// settingsFormID ties the form to the save button in the fixed head above it.
+const settingsFormID = "settings-form"
+
 func newSettingsPage(cfg config, sources map[string]*iniSource, groups []settingGroup) settingsPage {
-	page := settingsPage{
-		Groups:     groups,
-		Pending:    cfg.pending.get(),
-		CanRestart: cfg.rcon.configured(),
-	}
+	chrome := newChrome(cfg, "settings")
+	chrome.SaveForm = settingsFormID
+	page := settingsPage{Chrome: chrome, Groups: groups}
 	for _, g := range groups {
 		page.Fields += len(g.Rows)
 	}
@@ -218,6 +227,7 @@ func logsHandler(cfg config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		entries := withExistence(logFiles(cfg))
 		page := filePage{
+			Chrome:   newChrome(cfg, "logs"),
 			Files:    entries,
 			Selected: selected(entries, r.URL.Query().Get("f")),
 			Lines:    tailLines,

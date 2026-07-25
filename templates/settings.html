@@ -2,77 +2,99 @@
 <html lang="de">
 <head>{{template "head" .}}</head>
 <body>
-  <h1>arkserver-panel</h1>
-  {{template "nav" "settings"}}
+  {{template "topbar" .Chrome}}
 
-  {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
-  {{range .Notices}}<div class="flash bad">{{.}}</div>{{end}}
-  {{template "pending" .}}
-
-  <form method="post" action="/settings/save">
-    <div class="jump">
-      {{range .Groups}}<a href="#{{.Anchor}}">{{.Name}}</a>{{end}}
+  {{/* Filter and jump marks live in the sidebar, deliberately outside the form below: inside it,
+       Enter would submit the whole page of settings instead of filtering. */}}
+  <aside class="sidebar">
+    {{template "navlinks" .Chrome.Active}}
+    <input class="filter" id="filter" type="search" autocomplete="off" placeholder="Filtern">
+    <p class="count" id="count">{{.Fields}} Felder</p>
+    <div class="jump" id="jump">
+      {{range .Groups}}<a href="#{{.Anchor}}" data-for="{{.Anchor}}">{{.Name}}</a>{{end}}
     </div>
-    <input class="filter" id="filter" type="search" autocomplete="off"
-           placeholder="Filtern nach Beschriftung oder Key ({{.Fields}} Felder)">
+    <p class="hint">Ein leeres Feld heißt: der Key steht nicht in der Datei. Gespeichert wird nur,
+      was geändert wurde.</p>
+  </aside>
 
-    {{range .Groups}}
-      <section class="group" id="{{.Anchor}}">
-        <h2>{{.Name}}</h2>
-        {{range .Rows}}
-          <div class="row {{if .Error}}bad{{end}}" data-search="{{.Label}} {{.Key}}">
-            <label for="{{.ID}}">
-              {{.Label}}
-              <span class="key">{{.Key}}</span>
-            </label>
-            {{if .Locked}}
-              <input type="text" value="{{.Value}}" readonly>
-            {{else if eq .Kind "toggle"}}
-              <select name="{{.ID}}" id="{{.ID}}">
-                <option value="" {{if not .Set}}selected{{end}}>nicht gesetzt</option>
-                <option value="true" {{if and .Set (eq .Value "true")}}selected{{end}}>an</option>
-                <option value="false" {{if and .Set (eq .Value "false")}}selected{{end}}>aus</option>
-              </select>
-            {{else}}
-              <input type="text" name="{{.ID}}" id="{{.ID}}" value="{{.Value}}"
-                     spellcheck="false" {{if eq .Kind "number"}}inputmode="decimal"{{end}}
-                     placeholder="nicht gesetzt">
-            {{end}}
-            {{if .Error}}<div class="why">{{.Error}}</div>
-            {{else if .Locked}}<div class="why">{{.Locked}}</div>
-            {{else if .Hint}}<div class="why">{{.Hint}}</div>{{end}}
-          </div>
-        {{end}}
-      </section>
-    {{end}}
+  <main>
+    {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
+    {{range .Notices}}<div class="flash bad">{{.}}</div>{{end}}
+    {{template "pending" .}}
 
-    <div class="savebar actions">
-      <button type="submit">Speichern</button>
-      {{if .CanRestart}}
-        <label class="muted">
-          <input type="checkbox" name="restart" value="1" id="autorestart">
-          nach dem Speichern automatisch neu starten
-        </label>
+    <form method="post" action="/settings/save" id="settings-form">
+      {{range .Groups}}
+        <section class="group" id="{{.Anchor}}">
+          <h2>{{.Name}}</h2>
+          {{range .Rows}}
+            <div class="row {{if .Error}}bad{{end}}" data-search="{{.Label}} {{.Key}}">
+              <label for="{{.ID}}">
+                {{.Label}}
+                <span class="key">{{.Key}}</span>
+              </label>
+              {{if .Locked}}
+                <input type="text" value="{{.Value}}" readonly>
+              {{else if eq .Kind "toggle"}}
+                <select name="{{.ID}}" id="{{.ID}}">
+                  <option value="" {{if not .Set}}selected{{end}}>nicht gesetzt</option>
+                  <option value="true" {{if and .Set (eq .Value "true")}}selected{{end}}>an</option>
+                  <option value="false" {{if and .Set (eq .Value "false")}}selected{{end}}>aus</option>
+                </select>
+              {{else}}
+                <input type="text" name="{{.ID}}" id="{{.ID}}" value="{{.Value}}"
+                       spellcheck="false" {{if eq .Kind "number"}}inputmode="decimal"{{end}}
+                       placeholder="nicht gesetzt">
+              {{end}}
+              {{if .Error}}<div class="why">{{.Error}}</div>
+              {{else if .Locked}}<div class="why">{{.Locked}}</div>
+              {{else if .Hint}}<div class="why">{{.Hint}}</div>{{end}}
+            </div>
+          {{end}}
+        </section>
       {{end}}
-      <span class="muted">Leeres Feld heißt: der Key steht nicht in der Datei.</span>
-    </div>
-  </form>
+
+    </form>
+  </main>
 
   <script>
     // Filtering happens here rather than on the server: it is a way of finding a field among two
     // hundred, not a change to anything, and a round trip per keystroke would only be slower.
+    // Hidden rows stay in the form and are submitted unchanged, so filtering never edits anything.
+    const form = document.getElementById("settings-form");
     const filter = document.getElementById("filter");
+    const count = document.getElementById("count");
     const rows = [...document.querySelectorAll(".row")];
     const groups = [...document.querySelectorAll(".group")];
-    filter.addEventListener("input", () => {
+    const links = [...document.querySelectorAll("#jump a")];
+
+    function apply() {
       const q = filter.value.trim().toLowerCase();
+      let shown = 0;
       for (const row of rows) {
         row.hidden = q !== "" && !row.dataset.search.toLowerCase().includes(q);
+        if (!row.hidden) shown++;
       }
       for (const group of groups) {
         group.hidden = ![...group.querySelectorAll(".row")].some((r) => !r.hidden);
       }
+      for (const link of links) {
+        link.hidden = document.getElementById(link.dataset.for).hidden;
+      }
+      count.textContent = q === "" ? `${rows.length} Felder` : `${shown} von ${rows.length} Feldern`;
+    }
+    filter.addEventListener("input", apply);
+    filter.addEventListener("keydown", (e) => { if (e.key === "Enter") e.preventDefault(); });
+
+    // No accidental save: Enter in a value field would otherwise submit the whole page, and saving
+    // is a deliberate act with a button of its own.
+    form.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.target.tagName === "INPUT") e.preventDefault();
     });
+
+    // Following a jump mark on a narrow window closes the sidebar again, so the target is visible.
+    for (const link of links) {
+      link.addEventListener("click", () => document.body.classList.remove("side-open"));
+    }
 
     const box = document.getElementById("autorestart");
     if (box) {

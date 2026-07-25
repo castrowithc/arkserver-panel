@@ -2,50 +2,51 @@
 <html lang="de">
 <head>{{template "head" .}}</head>
 <body>
-  <h1>arkserver-panel</h1>
-  {{template "nav" "files"}}
+  {{template "topbar" .Chrome}}
+  <aside class="sidebar">{{template "navlinks" .Chrome.Active}}</aside>
 
-  <div class="tabs">
-    {{range .Files}}
-      <a href="/files?f={{.ID}}"
-         class="{{if eq .ID $.Selected.ID}}active{{end}} {{if not .Exists}}missing{{end}}">{{.Label}}</a>
+  <main>
+    <div class="tabs">
+      {{range .Files}}
+        <a href="/files?f={{.ID}}"
+           class="{{if eq .ID $.Selected.ID}}active{{end}} {{if not .Exists}}missing{{end}}">{{.Label}}</a>
+      {{end}}
+    </div>
+
+    {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
+    {{template "pending" .}}
+
+    {{if .Selected.Editable}}
+      <form method="post" action="/files/save">
+        <input type="hidden" name="f" value="{{.Selected.ID}}">
+        <textarea name="content" spellcheck="false">{{.Content}}</textarea>
+        <div class="actions">
+          <button type="submit">Speichern</button>
+          {{if .Chrome.CanRestart}}
+            <label class="muted">
+              <input type="checkbox" name="restart" value="1" id="autorestart">
+              nach dem Speichern automatisch neu starten
+            </label>
+          {{end}}
+        </div>
+      </form>
+      <script>
+        // Remember the choice per browser. Deliberately not a server-side setting: it is a habit of
+        // whoever is sitting here, not a property of the deployment, and it starts off.
+        const box = document.getElementById("autorestart");
+        if (box) {
+          box.checked = localStorage.getItem("autorestart") === "1";
+          box.addEventListener("change", () => localStorage.setItem("autorestart", box.checked ? "1" : "0"));
+        }
+      </script>
+    {{else}}
+      <textarea readonly spellcheck="false">{{.Content}}</textarea>
+      <p class="hint">
+        Nur lesend. Werte aus dieser Datei werden beim Erzeugen des Containers festgeschrieben, ein
+        Serverneustart übernimmt sie also nicht; dafür braucht es <code>docker compose up -d</code> auf
+        dem Host. Passwörter sind ausgeblendet.
+      </p>
     {{end}}
-  </div>
-
-  {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
-
-  {{template "pending" .}}
-
-  {{if .Selected.Editable}}
-    <form method="post" action="/files/save">
-      <input type="hidden" name="f" value="{{.Selected.ID}}">
-      <textarea name="content" spellcheck="false">{{.Content}}</textarea>
-      <div class="actions">
-        <button type="submit">Speichern</button>
-        {{if .CanRestart}}
-          <label class="muted">
-            <input type="checkbox" name="restart" value="1" id="autorestart">
-            nach dem Speichern automatisch neu starten
-          </label>
-        {{end}}
-      </div>
-    </form>
-    <script>
-      // Remember the choice per browser. Deliberately not a server-side setting: it is a habit of
-      // whoever is sitting here, not a property of the deployment, and it starts off.
-      const box = document.getElementById("autorestart");
-      if (box) {
-        box.checked = localStorage.getItem("autorestart") === "1";
-        box.addEventListener("change", () => localStorage.setItem("autorestart", box.checked ? "1" : "0"));
-      }
-    </script>
-  {{else}}
-    <textarea readonly spellcheck="false">{{.Content}}</textarea>
-    <p class="hint">
-      Nur lesend. Werte aus dieser Datei werden beim Erzeugen des Containers festgeschrieben, ein
-      Serverneustart übernimmt sie also nicht; dafür braucht es <code>docker compose up -d</code> auf
-      dem Host. Passwörter sind ausgeblendet.
-    </p>
-  {{end}}
+  </main>
 </body>
 </html>

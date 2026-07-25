@@ -40,6 +40,61 @@ func TestSettingsPageRendersEveryField(t *testing.T) {
 	}
 }
 
+// The filter field must sit outside the form. Inside it, Enter submits the page of settings
+// instead of filtering, which is how a keystroke in a search box came to save the server's config.
+func TestTheFilterFieldSitsOutsideTheForm(t *testing.T) {
+	body := get(t, newRouter(filesFixture(t)), "/settings").Body.String()
+
+	filter := strings.Index(body, `id="filter"`)
+	start := strings.Index(body, `<form method="post" action="/settings/save"`)
+	end := strings.Index(body, "</form>")
+	if filter < 0 || start < 0 || end < 0 {
+		t.Fatalf("page layout not recognised: filter=%d form=%d..%d", filter, start, end)
+	}
+	if filter > start && filter < end {
+		t.Error("the filter field is inside the form again, so Enter saves instead of filtering")
+	}
+}
+
+// The rows are laid out as a grid, and an author's display rule beats the browser's own handling of
+// the hidden attribute. Without an explicit rule the filter marks rows as hidden and they stay on
+// the page anyway, which is exactly what happened once.
+func TestHiddenRowsAreActuallyHidden(t *testing.T) {
+	body := get(t, newRouter(filesFixture(t)), "/settings").Body.String()
+	if !strings.Contains(body, "[hidden] { display: none !important; }") {
+		t.Error("the stylesheet no longer forces hidden elements out of the layout")
+	}
+}
+
+// Restarting has to be reachable from anywhere, not only from the bottom of a page that runs to two
+// hundred fields.
+func TestEveryPageOffersRestartInTheFixedHead(t *testing.T) {
+	cfg := filesFixture(t)
+	cfg.rcon = rconConfig{addr: "ark:27020", pass: "x"}
+	router := newRouter(cfg)
+
+	for _, path := range []string{"/", "/settings", "/files", "/logs"} {
+		body := get(t, router, path).Body.String()
+		head := body[:strings.Index(body, "</header>")+9]
+		if !strings.Contains(head, `action="/restart"`) {
+			t.Errorf("%s has no restart button in its head", path)
+		}
+	}
+	// The settings page reaches its save button from up there too.
+	if !strings.Contains(get(t, router, "/settings").Body.String(), `form="settings-form"`) {
+		t.Error("the head should carry the save button of the settings form")
+	}
+}
+
+// Without an RCON credential there is nothing to offer, and a button that cannot work is worse than
+// none.
+func TestNoRestartButtonWithoutRCON(t *testing.T) {
+	body := get(t, newRouter(filesFixture(t)), "/settings").Body.String()
+	if strings.Contains(body[:strings.Index(body, "</header>")], `action="/restart"`) {
+		t.Error("a restart is offered although the panel cannot perform it")
+	}
+}
+
 // The value in the file is what the form shows. Anything else would be a second truth.
 func TestSettingsPageShowsTheFileValue(t *testing.T) {
 	cfg := filesFixture(t)

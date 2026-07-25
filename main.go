@@ -93,13 +93,20 @@ func basicAuth(next http.Handler, user, pass string) http.Handler {
 	})
 }
 
+// indexPage wraps the monitor's own data in the frame every page carries. The status block stays a
+// value of its own, because the poll below re-renders exactly that block and nothing around it.
+type indexPage struct {
+	Chrome pageChrome
+	Status serverStatus
+}
+
 func index(cfg config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
-		render(w, "index.html", gatherStatus(cfg))
+		render(w, "index.html", indexPage{Chrome: newChrome(cfg, "monitor"), Status: gatherStatus(cfg)})
 	}
 }
 

@@ -3,20 +3,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>arkserver-panel</title>
   <style>
-    :root { color-scheme: light dark; --line: #8883; --muted: #8888; }
-    body { font: 16px/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 60rem; padding: 1.5rem; }
-    h1 { font-size: 1.25rem; margin: 0 0 1rem; }
+    :root { color-scheme: light dark; --line: #8883; --muted: #8888;
+            --top: 3.25rem; --side: 15rem; }
+    body { font: 16px/1.5 system-ui, sans-serif; margin: 0;
+           padding: var(--top) 0 0 var(--side); }
+    /* Any display rule below would otherwise beat the browser's own [hidden] handling, and a row
+       the filter marks as hidden would stay on the page. */
+    [hidden] { display: none !important; }
+    h1 { font-size: 1rem; margin: 0; }
     h2 { font-size: .8rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
          color: var(--muted); margin: 0 0 .5rem; }
-    nav { display: flex; gap: 1rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--line);
-          padding-bottom: .5rem; }
-    nav a { color: inherit; text-decoration: none; padding-bottom: .5rem; margin-bottom: -.55rem; }
-    nav a.active { border-bottom: 2px solid currentColor; font-weight: 600; }
+
+    /* The two fixed frames. Everything an operator reaches for lives in one of them, so no action
+       is ever a scroll away on a page that runs to two hundred fields. */
+    .topbar { position: fixed; top: 0; left: 0; right: 0; height: var(--top); z-index: 3;
+              display: flex; align-items: center; gap: .75rem; padding: 0 1rem;
+              border-bottom: 1px solid var(--line); background: Canvas; }
+    .sidebar { position: fixed; top: var(--top); bottom: 0; left: 0; width: var(--side); z-index: 2;
+               overflow-y: auto; padding: 1rem; box-sizing: border-box;
+               border-right: 1px solid var(--line); background: Canvas; }
+    main { max-width: 60rem; padding: 1.5rem; }
+
+    nav { display: flex; flex-direction: column; gap: .15rem; margin-bottom: 1.25rem; }
+    nav a { color: inherit; text-decoration: none; padding: .35rem .6rem; border-radius: .35rem; }
+    nav a.active { background: var(--line); font-weight: 600; }
     .bar { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
            border: 1px solid var(--line); border-radius: .5rem; padding: .75rem 1rem; }
     .spacer { flex: 1 }
     .inline { display: inline }
-    button { font: inherit; padding: .4rem .9rem; border: 1px solid var(--line);
+    button { font: inherit; padding: .35rem .8rem; border: 1px solid var(--line);
              border-radius: .35rem; background: transparent; color: inherit; cursor: pointer; }
     button:disabled { opacity: .4; cursor: not-allowed; }
     .dot { width: .7rem; height: .7rem; border-radius: 50%; background: var(--muted); }
@@ -51,13 +66,18 @@
     .flash.pending { border-color: #d38b1a }
     .flash.pending .actions { margin-top: .6rem }
     .hint { font-size: .85rem; color: var(--muted); margin: .5rem 0 0; }
-    .jump { display: flex; gap: .5rem; flex-wrap: wrap; margin: 0 0 1rem; font-size: .9rem; }
-    .jump a { color: inherit; }
-    .filter { width: 100%; box-sizing: border-box; font: inherit; padding: .45rem .7rem;
+
+    /* Settings form */
+    .filter { width: 100%; box-sizing: border-box; font: inherit; padding: .4rem .6rem;
               border: 1px solid var(--line); border-radius: .35rem; background: transparent;
-              color: inherit; margin-bottom: 1rem; }
+              color: inherit; }
+    .count { font-size: .8rem; color: var(--muted); margin: .35rem 0 1rem; }
+    .jump { display: flex; flex-direction: column; gap: .1rem; font-size: .9rem; }
+    .jump a { color: inherit; text-decoration: none; padding: .25rem .6rem; border-radius: .35rem; }
+    .jump a:hover { background: var(--line); }
     .group { margin-bottom: 2rem; }
-    .group h2 { font-size: .9rem; border-bottom: 1px solid var(--line); padding-bottom: .4rem; }
+    .group h2 { font-size: .9rem; border-bottom: 1px solid var(--line); padding-bottom: .4rem;
+                position: sticky; top: var(--top); background: Canvas; z-index: 1; }
     .row { display: grid; grid-template-columns: minmax(12rem, 2fr) minmax(9rem, 1fr);
            gap: .5rem 1rem; align-items: baseline; padding: .45rem 0;
            border-bottom: 1px solid var(--line); }
@@ -69,12 +89,45 @@
     .row.bad input, .row.bad select { border-color: #b3402f; }
     .row .why { grid-column: 1 / -1; font-size: .8rem; color: var(--muted); }
     .row.bad .why { color: #b3402f; }
-    .savebar { position: sticky; bottom: 0; background: Canvas; border-top: 1px solid var(--line);
-               padding: .75rem 0; }
+
+    /* Narrow windows: the sidebar slides over the content instead of squeezing it. */
+    @media (max-width: 48rem) {
+      body { padding-left: 0; }
+      .sidebar { transform: translateX(-100%); transition: transform .15s; }
+      body.side-open .sidebar { transform: none; box-shadow: 0 0 2rem #0006; }
+      .toggle { display: inline-flex !important; }
+    }
+    .toggle { display: none; }
   </style>
 {{end}}
 
-{{define "nav"}}
+{{/* The fixed head. It carries what applies everywhere (restarting) plus, where a page says so, the
+     save button of the form below it, so neither is ever a scroll away. */}}
+{{define "topbar"}}
+<header class="topbar">
+  <button type="button" class="toggle" onclick="document.body.classList.toggle('side-open')">Menü</button>
+  <h1>arkserver-panel</h1>
+  <span class="spacer"></span>
+  {{if .SaveForm}}
+    {{if .CanRestart}}
+      <label class="muted">
+        <input type="checkbox" name="restart" value="1" id="autorestart" form="{{.SaveForm}}">
+        nach dem Speichern neu starten
+      </label>
+    {{end}}
+    <button type="submit" form="{{.SaveForm}}">Speichern</button>
+  {{end}}
+  {{if .Pending}}<span class="muted" title="Gespeichert, aber noch nicht in Kraft">nicht in Kraft</span>{{end}}
+  {{if .CanRestart}}
+    <form method="post" action="/restart" class="inline"
+          onsubmit="return confirm('Server jetzt neu starten? Er ist dann rund vier bis fünf Minuten nicht erreichbar.')">
+      <button type="submit">Neu starten</button>
+    </form>
+  {{end}}
+</header>
+{{end}}
+
+{{define "navlinks"}}
 <nav>
   <a href="/" {{if eq . "monitor"}}class="active"{{end}}>Monitor</a>
   <a href="/settings" {{if eq . "settings"}}class="active"{{end}}>Einstellungen</a>
@@ -86,13 +139,13 @@
 {{/* The reminder that a save is written but not yet in effect, with the offer to restart right
      here. Shared by every page that writes to the volume. */}}
 {{define "pending"}}
-  {{if .Pending}}
+  {{if .Chrome.Pending}}
     <div class="flash pending">
       <div>
         Gespeicherte Änderungen sind noch nicht in Kraft. Sie greifen mit dem nächsten Neustart; bis
         dahin kann der laufende Server sie überschreiben.
       </div>
-      {{if .CanRestart}}
+      {{if .Chrome.CanRestart}}
         <form method="post" action="/restart" class="actions"
               onsubmit="return confirm('Server jetzt neu starten? Er ist dann rund vier bis fünf Minuten nicht erreichbar.')">
           <button type="submit">Jetzt neu starten</button>

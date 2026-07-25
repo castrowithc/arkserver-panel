@@ -2,9 +2,12 @@
 <html lang="de">
 <head>{{template "head" .}}</head>
 <body>
-  <h1>arkserver-panel</h1>
-  {{template "nav" "monitor"}}
-  <div id="status">{{template "status" .}}</div>
+  {{template "topbar" .Chrome}}
+  <aside class="sidebar">{{template "navlinks" .Chrome.Active}}</aside>
+
+  <main>
+    <div id="status">{{template "status" .Status}}</div>
+  </main>
 
   <script>
     // Poll the fragment instead of the page, so the scroll position and any open confirm dialog
