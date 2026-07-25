@@ -70,7 +70,10 @@ func writePacket(w io.Writer, id, typ int32, body string) {
 }
 
 func testConfig(addr string) rconConfig {
-	return rconConfig{addr: addr, pass: "secret", dialTimeout: 2 * time.Second, cmdTimeout: 2 * time.Second}
+	return rconConfig{
+		addr: addr, pass: "secret",
+		dialTimeout: 2 * time.Second, statusBudget: 2 * time.Second, commandBudget: 2 * time.Second,
+	}
 }
 
 func TestListPlayers(t *testing.T) {
@@ -109,6 +112,36 @@ func TestDialFailure(t *testing.T) {
 	cfg := testConfig("127.0.0.1:0")
 	if _, err := listPlayers(cfg); err == nil {
 		t.Fatal("want an error against an unreachable server, got none")
+	}
+}
+
+// A reloading ARK server accepts the connection well before it answers on it, seen during the live
+// restart test. A status poll must give up inside its budget rather than hold the page, and the
+// budget has to cover the whole exchange: without an absolute deadline the silent auth and the
+// silent command would each get the full wait and double it.
+func TestStatusGivesUpOnASilentServer(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	t.Cleanup(func() { ln.Close() })
+	go func() {
+		conn, err := ln.Accept()
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		select {} // accept, then never answer
+	}()
+
+	cfg := testConfig(ln.Addr().String())
+	cfg.statusBudget = 300 * time.Millisecond
+	start := time.Now()
+	if _, err := listPlayers(cfg); err == nil {
+		t.Fatal("want an error against a silent server, got none")
+	}
+	if waited := time.Since(start); waited > time.Second {
+		t.Errorf("want a give-up inside the budget, waited %s", waited)
 	}
 }
 

@@ -38,10 +38,12 @@ func loadConfig() config {
 			// COMPOSE_PROJECT_NAME and therefore changes with the deployment.
 			addr: envOr("ARK_RCON_ADDR", "ark:27020"),
 			pass: os.Getenv("ARK_ADMIN_PASSWORD"),
-			// A connect either succeeds at once or the server is unreachable, while SaveWorld on a
-			// large world runs for a good while before it answers.
-			dialTimeout: 5 * time.Second,
-			cmdTimeout:  60 * time.Second,
+			// A connect either succeeds at once or the server is unreachable. A status poll gives
+			// up quickly, because during a world reload the port accepts connections long before
+			// it answers on them. A restart gets a wide budget for SaveWorld.
+			dialTimeout:   5 * time.Second,
+			statusBudget:  5 * time.Second,
+			commandBudget: 120 * time.Second,
 		},
 	}
 }

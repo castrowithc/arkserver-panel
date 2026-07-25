@@ -30,31 +30,44 @@ const (
 const rconMaxPacket = 4096
 
 type rconConfig struct {
-	addr string
-	pass string
-	// Separate waits on purpose: a closed port must fail fast so the UI does not hang, while
-	// SaveWorld on a large world legitimately takes far longer than a connect ever should.
+	addr        string
+	pass        string
 	dialTimeout time.Duration
-	cmdTimeout  time.Duration
+	// Budgets bound a whole exchange, connect excluded, rather than a single read: auth and the
+	// command together, so the ceiling is the one the caller actually expects.
+	//
+	// They differ because the two callers want opposite things. While the server reloads its world
+	// it passes through a phase where it accepts the connection but answers nothing (seen during
+	// the live restart test), so a status poll has to give up quickly and report "restarting"
+	// instead of blocking the page. A restart, meanwhile, must tolerate a SaveWorld that
+	// legitimately runs long on a large world.
+	statusBudget  time.Duration
+	commandBudget time.Duration
 }
 
 func (c rconConfig) configured() bool { return c.addr != "" && c.pass != "" }
 
 type rconConn struct {
-	conn    net.Conn
-	timeout time.Duration
-	id      int32
+	conn net.Conn
+	id   int32
 }
 
-// dialRCON connects and authenticates. The caller closes the result. Each operation opens its own
-// connection: the monitor polls at a human interval, so a short-lived connection costs nothing and
-// saves having to detect and recover a stale one.
-func dialRCON(cfg rconConfig) (*rconConn, error) {
+// dialRCON connects and authenticates, giving the caller budget for everything that follows on this
+// connection. The caller closes the result. Each operation opens its own connection: the monitor
+// polls at a human interval, so a short-lived connection costs nothing and saves having to detect
+// and recover a stale one.
+func dialRCON(cfg rconConfig, budget time.Duration) (*rconConn, error) {
 	conn, err := net.DialTimeout("tcp", cfg.addr, cfg.dialTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("rcon: dial %s: %w", cfg.addr, err)
 	}
-	c := &rconConn{conn: conn, timeout: cfg.cmdTimeout}
+	// One absolute deadline for the whole exchange, never pushed back, so a server that accepts
+	// the connection and then goes quiet cannot hold the caller past the budget.
+	if err := conn.SetDeadline(time.Now().Add(budget)); err != nil {
+		conn.Close()
+		return nil, err
+	}
+	c := &rconConn{conn: conn}
 	if err := c.auth(cfg.pass); err != nil {
 		conn.Close()
 		return nil, err
@@ -106,9 +119,6 @@ func (c *rconConn) exec(cmd string) (string, error) {
 // send writes one packet: size, id, type, body, then the two terminating nulls. The size counts
 // everything after itself.
 func (c *rconConn) send(typ int32, body string) (int32, error) {
-	if err := c.conn.SetDeadline(time.Now().Add(c.timeout)); err != nil {
-		return 0, err
-	}
 	c.id++
 	pkt := make([]byte, 0, 14+len(body))
 	pkt = binary.LittleEndian.AppendUint32(pkt, uint32(10+len(body)))
@@ -123,9 +133,6 @@ func (c *rconConn) send(typ int32, body string) (int32, error) {
 }
 
 func (c *rconConn) recv() (int32, int32, string, error) {
-	if err := c.conn.SetDeadline(time.Now().Add(c.timeout)); err != nil {
-		return 0, 0, "", err
-	}
 	var head [4]byte
 	if _, err := io.ReadFull(c.conn, head[:]); err != nil {
 		return 0, 0, "", fmt.Errorf("rcon: read size: %w", err)
@@ -145,7 +152,7 @@ func (c *rconConn) recv() (int32, int32, string, error) {
 
 // listPlayers reports who is online.
 func listPlayers(cfg rconConfig) ([]string, error) {
-	c, err := dialRCON(cfg)
+	c, err := dialRCON(cfg, cfg.statusBudget)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +193,7 @@ func parsePlayers(out string) []string {
 // autorestart pulls the process straight back; expect roughly four to five minutes until players
 // can join again, dominated by the world load.
 func restartServer(cfg rconConfig) error {
-	c, err := dialRCON(cfg)
+	c, err := dialRCON(cfg, cfg.commandBudget)
 	if err != nil {
 		return err
 	}
