@@ -168,13 +168,14 @@ func TestSaveCreatesTheKeyAndTheSection(t *testing.T) {
 }
 
 // Emptying a field means the operator takes the setting back, so the line leaves the file rather
-// than being written as some default.
+// than being written as some default. Here it was the section's only key, so the header goes with
+// it: the panel writes a header when it needs one and must not leave one behind.
 func TestSaveRemovesTheKeyWhenTheFieldIsCleared(t *testing.T) {
 	cfg := filesFixture(t)
 	postForm(t, newRouter(cfg), "/settings/save", url.Values{
 		"gameusersettings.xpmultiplier": {""},
 	})
-	if got := readINI(t, cfg, "GameUserSettings.ini"); got != "[ServerSettings]\n" {
+	if got := readINI(t, cfg, "GameUserSettings.ini"); got != "" {
 		t.Errorf("file reads %q", got)
 	}
 }

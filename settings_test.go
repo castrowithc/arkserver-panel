@@ -8,8 +8,9 @@ import (
 // The catalogue is a fixed data file, so its size is a fact worth guarding: a field that silently
 // disappears in some future edit would take a form field with it.
 func TestCatalogueLoads(t *testing.T) {
-	if len(settingFields) != 210 {
-		t.Fatalf("want 210 fields, got %d", len(settingFields))
+	// 210 from the reference screens, plus the 36 per-level multipliers.
+	if len(settingFields) != 246 {
+		t.Fatalf("want 246 fields, got %d", len(settingFields))
 	}
 	if a, b := len(fieldsForFile("gameusersettings")), len(fieldsForFile("game")); a+b != len(settingFields) {
 		t.Errorf("%d + %d fields do not add up to %d", a, b, len(settingFields))

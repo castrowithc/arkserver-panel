@@ -35,7 +35,7 @@ func parseINI(text string) *iniFile {
 	for i, line := range f.lines {
 		t := strings.TrimSpace(line)
 		switch {
-		case strings.HasPrefix(t, "[") && strings.HasSuffix(t, "]"):
+		case isSectionHeader(t):
 			section = t[1 : len(t)-1]
 		case t == "" || strings.HasPrefix(t, ";") || strings.HasPrefix(t, "#"):
 		default:
@@ -96,10 +96,52 @@ func (f *iniFile) unset(section, key string) error {
 	case 1:
 		f.lines = slices.Delete(f.lines, at[0], at[0]+1)
 		f.reindex()
+		f.dropSectionIfEmpty(section)
 		return nil
 	default:
 		return fmt.Errorf("%s steht %d mal in [%s] und gehoert deshalb in den Roh-Editor", key, len(at), section)
 	}
+}
+
+// dropSectionIfEmpty takes the header away once its block holds no key at all. Writing the first
+// value of a section brings the header along, so without this the panel would add something it
+// never takes back, and clearing the last value would leave an empty block nobody wrote. Only blank
+// lines may stand in the block: a comment is someone's note, and it keeps its section.
+func (f *iniFile) dropSectionIfEmpty(section string) {
+	for id := range f.where {
+		if id.section == normKey(section) {
+			return
+		}
+	}
+
+	head := -1
+	for i, line := range f.lines {
+		if t := strings.TrimSpace(line); isSectionHeader(t) && strings.EqualFold(t[1:len(t)-1], section) {
+			head = i
+			break
+		}
+	}
+	if head < 0 {
+		return
+	}
+
+	end := head + 1
+	for end < len(f.lines) {
+		t := strings.TrimSpace(f.lines[end])
+		if isSectionHeader(t) {
+			break
+		}
+		if t != "" {
+			return // a comment lives here, so the block is not the panel's to remove
+		}
+		end++
+	}
+	f.lines = slices.Delete(f.lines, head, end)
+	f.reindex()
+}
+
+func isSectionHeader(trimmed string) bool {
+	return strings.HasPrefix(trimmed, "[") && strings.HasSuffix(trimmed, "]")
 }
 
 func (f *iniFile) insert(section, key, value string) {

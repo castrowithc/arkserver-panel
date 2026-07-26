@@ -26,6 +26,7 @@
       {{range .Groups}}
         <section class="group" id="{{.Anchor}}">
           <h2>{{.Name}}</h2>
+          {{if .Note}}<p class="hint note">{{.Note}}</p>{{end}}
           {{range .Rows}}
             <div class="row {{if .Error}}bad{{end}}" data-search="{{.Label}} {{.Key}}">
               <label for="{{.ID}}">

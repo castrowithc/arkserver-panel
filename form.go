@@ -60,7 +60,24 @@ type settingRow struct {
 type settingGroup struct {
 	Name   string
 	Anchor string
-	Rows   []settingRow
+	// Note is a reservation that belongs to the block as a whole rather than to any one field.
+	Note string
+	Rows []settingRow
+}
+
+// statArrayNote hangs on the three multiplier blocks. Their field set and index mapping come from
+// the reference screens, their key names do not: those come from knowledge of the game, and this
+// deployment cannot attest them either, because ARK leaves the Game.ini empty until an override
+// exists and ignores a key it does not know without a word. So the block says so, rather than let a
+// value that does nothing pass for a setting that was made.
+const statArrayNote = "Die Key-Namen dieses Blocks sind an diesem Server nicht belegt: ein Wert " +
+	"wirkt nur, wenn der Key stimmt, und trifft er nicht zu, ignoriert ARK ihn stillschweigend. " +
+	"Der Faktor gilt auf den Zuwachs pro Stufe (1 = 5 pro Stufe, 4 = 20)."
+
+var groupNotes = map[string]string{
+	"Multiplikatoren Spieler":        statArrayNote,
+	"Multiplikatoren wilde Dinos":    statArrayNote,
+	"Multiplikatoren gezähmte Dinos": statArrayNote,
 }
 
 func (f settingField) kind() string {
@@ -139,7 +156,7 @@ func buildGroups(sources map[string]*iniSource) []settingGroup {
 		if !ok {
 			i = len(groups)
 			at[f.Group] = i
-			groups = append(groups, settingGroup{Name: f.Group, Anchor: anchor(f.Group)})
+			groups = append(groups, settingGroup{Name: f.Group, Anchor: anchor(f.Group), Note: groupNotes[f.Group]})
 		}
 		groups[i].Rows = append(groups[i].Rows, row)
 	}

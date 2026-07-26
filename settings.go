@@ -3,9 +3,13 @@
 // reference host's configuration screens and checked against the INIs this server writes itself, so
 // the panel does not have to guess a key at runtime.
 //
-// Deliberately absent: the per-level stat arrays and the procedural map parameters. Their key names
-// are not attested by any source here, and a form that writes a key the game ignores looks like
-// control without being it.
+// The per-level stat arrays are the one part whose key names no source here attests: they are
+// indexed keys taken from knowledge of the game, and this deployment cannot attest them either,
+// because ARK leaves the Game.ini empty until an override exists and ignores an unknown key without
+// a word. They are carried anyway, with the reservation stated on their blocks, so a value that
+// does nothing is not mistaken for a setting that was made.
+//
+// Deliberately absent: the procedural map parameters, which are moot for this deployment.
 package main
 
 import (

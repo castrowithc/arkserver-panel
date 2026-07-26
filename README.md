@@ -11,9 +11,10 @@ bearbeitet die Dateien weiter direkt.
 - **Monitor:** Zustand, Healthcheck, CPU, RAM gegen das Limit, Spielerliste, installierter
   Steam-Build. Aktualisiert sich selbst.
 - **Lifecycle:** Neu starten (RCON, mit Speichern), Stoppen und Starten.
-- **Einstellungen:** erzeugtes Formular über 210 Felder der beiden INIs, gruppiert und filterbar.
+- **Einstellungen:** erzeugtes Formular über 246 Felder der beiden INIs, gruppiert und filterbar.
   Ein leeres Feld heißt, dass der Key nicht in der Datei steht, und bleibt beim Speichern auch weg;
-  geschrieben wird nur, was geändert wurde.
+  geschrieben wird nur, was geändert wurde. Die 36 Multiplikatoren pro Stufe tragen einen Vorbehalt:
+  ihre Key-Namen sind an diesem Server nicht belegt.
 - **Dateien:** Roh-Editor für `GameUserSettings.ini` und `Game.ini`. Nach dem Speichern erinnert das
   Panel daran, dass die Änderung erst mit einem Neustart greift.
 - **Logs:** read-only, jeweils das Ende der Datei.
@@ -22,9 +23,9 @@ bearbeitet die Dateien weiter direkt.
   Zurückspielen stoppt den Server, ersetzt genau die Dateien aus dem Archiv (Welt-Stand,
   Spielerprofile und beide INIs) und startet ihn wieder.
 
-Bewusst nicht drin: die Stat-Multiplikatoren pro Stufe und die Parameter prozeduraler Karten (ihre
-Key-Namen sind nicht belegt), schreibende `.env`, Mods-Browser, geplante Neustarts. Sicherungen legt
-das Panel nicht selbst an: das erledigt der Server per Cron, vor jedem Update und bei jedem Stop.
+Bewusst nicht drin: die Parameter prozeduraler Karten, schreibende `.env`, Mods-Browser, geplante
+Neustarts. Sicherungen legt das Panel nicht selbst an: das erledigt der Server per Cron, vor jedem
+Update und bei jedem Stop.
 
 ## Betrieb
 Im Deployment steckt der Dienst im Compose-Profil `panel`, zusammen mit einem pfadgefilterten
