@@ -371,8 +371,13 @@ func TestNumberFieldsCarryBoundsArrowsAndReference(t *testing.T) {
 // nothing, and in a dark scheme its text is legible only under the pointer.
 func TestDropdownOptionsHaveABackground(t *testing.T) {
 	body := get(t, newRouter(filesFixture(t)), "/settings").Body.String()
-	if !strings.Contains(body, "select, select option { background: Canvas; color: CanvasText; }") {
+	if !strings.Contains(body, "select, select option { background: var(--surface)") {
 		t.Error("the stylesheet no longer gives the option list a surface of its own")
+	}
+	// The surface has to be a real colour rather than the page showing through, which is what the
+	// fault was. A token is fine; transparent is not.
+	if strings.Contains(body, "select, select option { background: transparent") {
+		t.Error("the option list is transparent again")
 	}
 }
 
