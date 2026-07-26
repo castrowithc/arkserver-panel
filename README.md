@@ -18,7 +18,12 @@ bearbeitet die Dateien weiter direkt.
 - **Dateien:** Roh-Editor für `GameUserSettings.ini` und `Game.ini`. Nach dem Speichern erinnert das
   Panel daran, dass die Änderung erst mit einem Neustart greift.
 - **Logs:** read-only, jeweils das Ende der Datei.
-- **`.env`:** read-only, Passwortwerte maskiert.
+- **`.env`:** read-only. Als Rohtext mit maskierten Passwörtern auf der Dateien-Seite, dazu die
+  Seite „Deployment": die Werte mit Namen und der Angabe, was jeder bewirkt und wo er geändert wird.
+- **Was das Deployment besetzt, ist gesperrt:** neun Keys schreibt arkmanager bei jedem Start aus der
+  `.env` in die `GameUserSettings.ini` (Servername, Passwörter, Slots, Mod-IDs, Ports). Das Formular
+  zeigt sie mit Wert, aber schreibgeschützt und mit Begründung, statt eine Änderung anzunehmen, die
+  der nächste Start verwirft.
 - **Sicherungen:** die vorhandenen Archive auflisten, herunterladen und eines zurückspielen. Das
   Zurückspielen stoppt den Server, ersetzt genau die Dateien aus dem Archiv (Welt-Stand,
   Spielerprofile und beide INIs) und startet ihn wieder.

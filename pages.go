@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 // tailLines is what the log viewer shows. Enough to cover a start-up sequence, short enough to
@@ -323,6 +324,40 @@ func restoreBackupHandler(cfg config) http.HandlerFunc {
 		// before is meaningless.
 		cfg.pending.clear()
 		http.Redirect(w, r, "/backups?restored="+strconv.Itoa(restored), http.StatusSeeOther)
+	}
+}
+
+type envPage struct {
+	Chrome pageChrome
+	Values []envValue
+	// Stale is true when the file has been edited since the container was built, so what the page
+	// lists is not what the server is running with. Unknown without Docker access, hence Known.
+	Stale  bool
+	Known  bool
+	Flash  string
+	Failed bool
+}
+
+func envHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		page := envPage{Chrome: newChrome(cfg, "env")}
+		values, err := loadEnvValues(cfg)
+		if err != nil {
+			page.Flash, page.Failed = ".env nicht lesbar: "+err.Error(), true
+			render(w, "env.html", page)
+			return
+		}
+		page.Values = values
+
+		if info, err := envModified(cfg); err == nil && cfg.docker.configured() {
+			if st, err := cfg.docker.state(); err == nil && !st.Created.IsZero() {
+				page.Known = true
+				// Truncated to the second: one timestamp comes from Docker's JSON and the other from
+				// the filesystem, so a sub-second difference between them says nothing.
+				page.Stale = info.ModTime().Truncate(time.Second).After(st.Created.Truncate(time.Second))
+			}
+		}
+		render(w, "env.html", page)
 	}
 }
 

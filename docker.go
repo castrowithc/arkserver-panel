@@ -26,7 +26,11 @@ func (c dockerConfig) configured() bool { return c.host != "" && c.container != 
 
 // containerState is the slice of Docker's container JSON the monitor actually shows.
 type containerState struct {
-	State struct {
+	// Created is when this container was made, which is not the same as when it was last started:
+	// only a recreate moves it. That makes it the honest answer to whether the .env on disk is the
+	// one the running server was built from, because those values are frozen in at creation.
+	Created time.Time `json:"Created"`
+	State   struct {
 		Status    string    `json:"Status"`
 		Running   bool      `json:"Running"`
 		StartedAt time.Time `json:"StartedAt"`

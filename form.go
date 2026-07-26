@@ -74,6 +74,33 @@ const statArrayNote = "Die Key-Namen dieses Blocks sind an diesem Server nicht b
 	"wirkt nur, wenn der Key stimmt, und trifft er nicht zu, ignoriert ARK ihn stillschweigend. " +
 	"Der Faktor gilt auf den Zuwachs pro Stufe (1 = 5 pro Stufe, 4 = 20)."
 
+// envManagedKeys are the INI keys this deployment does not leave to the file. arkmanager holds them
+// in its own config, fed from the .env, and writes them into GameUserSettings.ini every time the
+// server starts. A form field for one of them would take an edit, show it saved, and lose it without
+// a word at the next start, so the form shows them read-only and names the variable that owns them.
+var envManagedKeys = map[string]string{
+	"SessionName":         "SESSION_NAME",
+	"ServerPassword":      "SERVER_PASSWORD",
+	"ServerAdminPassword": "ADMIN_PASSWORD",
+	"MaxPlayers":          "MAX_PLAYERS",
+	"GameModIds":          "GAME_MOD_IDS",
+	"Port":                "der Compose-Datei",
+	"QueryPort":           "der Compose-Datei",
+	"RCONPort":            "der Compose-Datei",
+	"RCONEnabled":         "arkmanager",
+}
+
+func envManagedReason(key string) string {
+	owner, ok := envManagedKeys[key]
+	if !ok {
+		return ""
+	}
+	if strings.HasPrefix(owner, "der ") || owner == "arkmanager" {
+		return "wird beim Start aus " + owner + " gesetzt"
+	}
+	return "wird beim Start aus " + owner + " in der .env gesetzt"
+}
+
 var groupNotes = map[string]string{
 	"Multiplikatoren Spieler":        statArrayNote,
 	"Multiplikatoren wilde Dinos":    statArrayNote,
@@ -136,12 +163,18 @@ func buildGroups(sources map[string]*iniSource) []settingGroup {
 		case src == nil || src.err != nil:
 			row.Locked = "Datei nicht lesbar"
 		default:
+			managed := envManagedReason(f.Key)
 			value, occurrences := src.ini.lookup(f.Section, f.Key)
 			switch {
 			case occurrences > 1:
 				row.Locked = fmt.Sprintf("steht %d mal in der Datei, im Roh-Editor zu klaeren", occurrences)
 			case occurrences == 1:
 				row.Value, row.Set = value, true
+			}
+			// The deployment owning a key outranks anything the file says about it: whatever stands
+			// there now, the next start replaces it.
+			if managed != "" {
+				row.Locked = managed
 			}
 			if row.Set && row.Kind == "toggle" {
 				v, ok := toggleValue(row.Value)
