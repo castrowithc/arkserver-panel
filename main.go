@@ -16,7 +16,11 @@ import (
 //go:embed templates/*.html
 var templatesFS embed.FS
 
-var templates = template.Must(template.ParseFS(templatesFS, "templates/*.html"))
+// The navigation is one fixed structure for the whole panel, so the templates read it from here
+// rather than every page carrying a copy of it through its own struct.
+var templates = template.Must(template.New("").
+	Funcs(template.FuncMap{"navigation": func() []navSection { return navigation }}).
+	ParseFS(templatesFS, "templates/*.html"))
 
 type config struct {
 	addr string
@@ -106,7 +110,7 @@ func index(cfg config) http.HandlerFunc {
 			http.NotFound(w, r)
 			return
 		}
-		render(w, "index.html", indexPage{Chrome: newChrome(cfg, "monitor"), Status: gatherStatus(cfg)})
+		render(w, "index.html", indexPage{Chrome: newChrome(cfg, "status"), Status: gatherStatus(cfg)})
 	}
 }
 
@@ -171,8 +175,12 @@ func newRouter(cfg config) http.Handler {
 	app := http.NewServeMux()
 	app.HandleFunc("/", index(cfg))
 	app.HandleFunc("/status", statusFragment(cfg))
-	app.HandleFunc("/settings", settingsHandler(cfg))
-	app.HandleFunc("/settings/save", saveSettingsHandler(cfg))
+	// Two generated form pages, named after the reference screens they correspond to. They share a
+	// handler and post to their own path, so a save on one never reaches the fields of the other.
+	app.HandleFunc(basisScreen.Path, settingsHandler(cfg, basisScreen))
+	app.HandleFunc(basisScreen.Save, saveSettingsHandler(cfg, basisScreen))
+	app.HandleFunc(engineScreen.Path, settingsHandler(cfg, engineScreen))
+	app.HandleFunc(engineScreen.Save, saveSettingsHandler(cfg, engineScreen))
 	app.HandleFunc("/files", filesHandler(cfg))
 	app.HandleFunc("/files/save", saveFileHandler(cfg))
 	app.HandleFunc("/logs", logsHandler(cfg))

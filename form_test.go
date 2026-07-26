@@ -19,24 +19,44 @@ func readINI(t *testing.T, cfg config, name string) string {
 	return string(b)
 }
 
-func TestSettingsPageRendersEveryField(t *testing.T) {
-	rec := get(t, newRouter(filesFixture(t)), "/settings")
-	if rec.Code != http.StatusOK {
-		t.Fatalf("want 200, got %d", rec.Code)
+// The catalogue is split across the two pages the reference names, and every field has to land on
+// exactly one of them: a field on neither would be unreachable, a field on both would be saved twice.
+func TestSettingsPagesRenderEveryFieldBetweenThem(t *testing.T) {
+	router := newRouter(filesFixture(t))
+	basis := get(t, router, "/settings")
+	engine := get(t, router, "/engine")
+	if basis.Code != http.StatusOK || engine.Code != http.StatusOK {
+		t.Fatalf("want 200 from both, got %d and %d", basis.Code, engine.Code)
 	}
-	body := rec.Body.String()
+	b, e := basis.Body.String(), engine.Body.String()
+
 	for _, want := range []string{
 		`name="gameusersettings.xpmultiplier"`, // a value the fixture has
 		`name="game.matingintervalmultiplier"`, // one from the still empty Game.ini
 		"Gameplay und Chat",                    // the group headings
 		"nicht gesetzt",
 	} {
-		if !strings.Contains(body, want) {
-			t.Errorf("the page is missing %q", want)
+		if !strings.Contains(b, want) {
+			t.Errorf("Basiseinstellungen is missing %q", want)
 		}
 	}
-	if n := strings.Count(body, `class="row`); n != len(settingFields) {
-		t.Errorf("want %d rows, got %d", len(settingFields), n)
+	if !strings.Contains(e, `name="game.perlevelstatsmultiplier_player[0]"`) {
+		t.Error("Engine Einstellungen is missing the per-level multipliers")
+	}
+
+	nb, ne := strings.Count(b, `class="row`), strings.Count(e, `class="row`)
+	if nb+ne != len(settingFields) {
+		t.Errorf("%d + %d rows do not add up to %d", nb, ne, len(settingFields))
+	}
+	if ne != 36 {
+		t.Errorf("want the 36 per-level multipliers on their own page, got %d", ne)
+	}
+	// Each page carries only its own fields, which is what makes a save on one harmless to the other.
+	if strings.Contains(b, "PerLevelStatsMultiplier_") {
+		t.Error("a multiplier field turned up on Basiseinstellungen")
+	}
+	if strings.Contains(e, `name="gameusersettings.xpmultiplier"`) {
+		t.Error("a base field turned up on Engine Einstellungen")
 	}
 }
 
@@ -376,5 +396,54 @@ func TestAValueThatIsNotANumberIsNotOfferedAsANumberField(t *testing.T) {
 	}
 	if !strings.Contains(body, "Wert ist keine Zahl") {
 		t.Error("the page should say why the field cannot be edited")
+	}
+}
+
+// The two form pages save independently. A submission carries every field of its page, including
+// the untouched ones, so if a save considered the other page's fields as well, every save on one
+// screen would read the other's as "submitted empty" and strip those keys from the file.
+func TestASaveOnOneScreenLeavesTheOtherAlone(t *testing.T) {
+	cfg := filesFixture(t)
+	cfg.pending = &restartFlag{}
+	router := newRouter(cfg)
+
+	// Put a value on each page first, from the page that owns it.
+	postForm(t, router, "/settings/save", url.Values{"gameusersettings.xpmultiplier": {"2.5"}})
+	postForm(t, router, "/engine/save", url.Values{"game.perlevelstatsmultiplier_player[0]": {"1.4"}})
+	base, game := readINI(t, cfg, "GameUserSettings.ini"), readINI(t, cfg, "Game.ini")
+	if !strings.Contains(base, "XPMultiplier=2.5") || !strings.Contains(game, "PerLevelStatsMultiplier_Player[0]=1.4") {
+		t.Fatalf("the two values did not land: %q / %q", base, game)
+	}
+
+	// Now save on one page while naming a field of the other. The stray field is not this page's to
+	// write, so it must be ignored rather than applied or cleared.
+	postForm(t, router, "/engine/save", url.Values{
+		"game.perlevelstatsmultiplier_player[0]": {"1.4"},
+		"gameusersettings.xpmultiplier":          {""},
+	})
+	if got := readINI(t, cfg, "GameUserSettings.ini"); got != base {
+		t.Errorf("a save on Engine Einstellungen changed the other page's file:\n%q\nwant\n%q", got, base)
+	}
+
+	postForm(t, router, "/settings/save", url.Values{
+		"gameusersettings.xpmultiplier":          {"2.5"},
+		"game.perlevelstatsmultiplier_player[0]": {""},
+	})
+	if got := readINI(t, cfg, "Game.ini"); got != game {
+		t.Errorf("a save on Basiseinstellungen changed the other page's file:\n%q\nwant\n%q", got, game)
+	}
+}
+
+// Each page redirects back to itself, or a save would land the operator on the other screen.
+func TestEachFormPageRedirectsToItself(t *testing.T) {
+	router := newRouter(filesFixture(t))
+	for path, want := range map[string]string{
+		"/settings/save": "/settings?saved=",
+		"/engine/save":   "/engine?saved=",
+	} {
+		rec := postForm(t, router, path, url.Values{})
+		if loc := rec.Header().Get("Location"); !strings.HasPrefix(loc, want) {
+			t.Errorf("%s redirects to %q, want a %q", path, loc, want)
+		}
 	}
 }

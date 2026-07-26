@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de">
-<head>{{template "head" .}}</head>
+<head>{{template "head" .Chrome}}</head>
 <body>
   {{template "topbar" .Chrome}}
 
@@ -27,7 +27,7 @@
     {{/* novalidate: the bounds are checked on save, where a rejection can name the field and say
          why. The browser's own check would refuse silently instead, and it would also refuse a
          value that is already in the file but sits between two steps. */}}
-    <form method="post" action="/settings/save" id="settings-form" novalidate>
+    <form method="post" action="{{.Action}}" id="settings-form" novalidate>
       {{range .Groups}}
         <section class="group" id="{{.Anchor}}">
           <h2>{{.Name}}</h2>

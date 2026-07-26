@@ -8,25 +8,30 @@ bearbeitet die Dateien weiter direkt.
 **Status:** v1. Am laufenden Server abgenommen.
 
 ## Was es kann
-- **Monitor:** Zustand, Healthcheck, CPU, RAM gegen das Limit, Spielerliste, installierter
+Die Seiten heißen wie die Bildschirme der Referenz-Oberfläche. Wo es kein Gegenstück gibt, ist die
+Seite in der Navigation als eigene gekennzeichnet.
+
+- **Status:** Zustand, Healthcheck, CPU, RAM gegen das Limit, Spielerliste, installierter
   Steam-Build. Aktualisiert sich selbst.
 - **Lifecycle:** Neu starten (RCON, mit Speichern), Stoppen und Starten.
-- **Einstellungen:** erzeugtes Formular über 246 Felder der beiden INIs, gruppiert und filterbar.
-  Ein leeres Feld heißt, dass der Key nicht in der Datei steht und der Wert des Spiels gilt, und
-  bleibt beim Speichern auch weg; geschrieben wird nur, was geändert wurde. Zahlenfelder tragen
+- **Basiseinstellungen und Engine Einstellungen:** erzeugtes Formular über 246 Felder der beiden
+  INIs, aufgeteilt wie in der Referenz (210 und 36), je Seite gruppiert und filterbar; ein Speichern
+  berührt nie ein Feld der anderen Seite. Ein leeres Feld heißt, dass der Key nicht in der Datei
+  steht und der Wert des Spiels gilt, und bleibt beim Speichern auch weg; geschrieben wird nur, was
+  geändert wurde. Zahlenfelder tragen
   Grenzen und Schrittweite, geprüft wird beim Speichern. 239 Felder nennen zusätzlich den Wert eines
   fremden Beispielservers als Größenordnung, ausdrücklich nicht als Vorgabewert. 229 der 246
   Felder sind durch eine laufende Installation belegt, 17 bisher nur durch ein Formular.
-- **Dateien:** Roh-Editor für `GameUserSettings.ini` und `Game.ini`. Nach dem Speichern erinnert das
-  Panel daran, dass die Änderung erst mit einem Neustart greift.
+- **Konfigurationsdateien:** Roh-Editor für `GameUserSettings.ini` und `Game.ini`. Nach dem
+  Speichern erinnert das Panel daran, dass die Änderung erst mit einem Neustart greift.
 - **Logs:** read-only, jeweils das Ende der Datei.
-- **`.env`:** read-only. Als Rohtext mit maskierten Passwörtern auf der Dateien-Seite, dazu die
+- **`.env`:** read-only. Als Rohtext mit maskierten Passwörtern unter Konfigurationsdateien, dazu die
   Seite „Deployment": die Werte mit Namen und der Angabe, was jeder bewirkt und wo er geändert wird.
 - **Was das Deployment besetzt, ist gesperrt:** neun Keys schreibt arkmanager bei jedem Start aus der
   `.env` in die `GameUserSettings.ini` (Servername, Passwörter, Slots, Mod-IDs, Ports). Das Formular
   zeigt sie mit Wert, aber schreibgeschützt und mit Begründung, statt eine Änderung anzunehmen, die
   der nächste Start verwirft.
-- **Sicherungen:** die vorhandenen Archive auflisten, herunterladen und eines zurückspielen. Das
+- **Backup:** die vorhandenen Archive auflisten, herunterladen und eines zurückspielen. Das
   Zurückspielen stoppt den Server, ersetzt genau die Dateien aus dem Archiv (Welt-Stand,
   Spielerprofile und beide INIs) und startet ihn wieder.
 

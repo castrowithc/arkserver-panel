@@ -1,7 +1,7 @@
 {{define "head"}}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>arkserver-panel</title>
+  <title>{{with .Title}}{{.}} · {{end}}arkserver-panel</title>
   <style>
     :root { color-scheme: light dark; --line: #8883; --muted: #8888;
             --top: 3.25rem; --side: 15rem; }
@@ -27,6 +27,12 @@
     nav { display: flex; flex-direction: column; gap: .15rem; margin-bottom: 1.25rem; }
     nav a { color: inherit; text-decoration: none; padding: .35rem .6rem; border-radius: .35rem; }
     nav a.active { background: var(--line); font-weight: 600; }
+    /* A page the reference has no counterpart for says so, quietly. */
+    .own { font-size: .7rem; color: var(--muted); border: 1px solid var(--line);
+           border-radius: .25rem; padding: 0 .25rem; margin-left: .3rem; }
+    /* Which page this is, next to the product name in the fixed head. */
+    .where { font-size: .9rem; color: var(--muted); }
+    .where::before { content: "/"; margin-right: .5rem; }
     .bar { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
            border: 1px solid var(--line); border-radius: .5rem; padding: .75rem 1rem; }
     .spacer { flex: 1 }
@@ -123,6 +129,7 @@
 <header class="topbar">
   <button type="button" class="toggle" onclick="document.body.classList.toggle('side-open')">Menü</button>
   <h1>arkserver-panel</h1>
+  {{with .Title}}<span class="where">{{.}}</span>{{end}}
   <span class="spacer"></span>
   {{if .SaveForm}}
     {{if .CanRestart}}
@@ -143,15 +150,20 @@
 </header>
 {{end}}
 
+{{/* Grouped and named after the reference screens, so the same page has the same name in the panel
+     and in the documentation. An entry the reference has no counterpart for is marked as the
+     panel's own rather than passed off as one of theirs. Takes the active key. */}}
 {{define "navlinks"}}
-<nav>
-  <a href="/" {{if eq . "monitor"}}class="active"{{end}}>Monitor</a>
-  <a href="/settings" {{if eq . "settings"}}class="active"{{end}}>Einstellungen</a>
-  <a href="/files" {{if eq . "files"}}class="active"{{end}}>Dateien</a>
-  <a href="/env" {{if eq . "env"}}class="active"{{end}}>Deployment</a>
-  <a href="/logs" {{if eq . "logs"}}class="active"{{end}}>Logs</a>
-  <a href="/backups" {{if eq . "backups"}}class="active"{{end}}>Sicherungen</a>
-</nav>
+{{$active := .}}
+{{range $section := navigation}}
+  <nav>
+    <h2>{{$section.Name}}</h2>
+    {{range $section.Entries}}
+      <a href="{{.Path}}" {{if eq .Key $active}}class="active"{{end}}>{{.Title}}{{if .Own}}
+        <span class="own" title="Eigene Seite, kein Gegenstück in der Referenz">eigen</span>{{end}}</a>
+    {{end}}
+  </nav>
+{{end}}
 {{end}}
 
 {{/* The reminder that a save is written but not yet in effect, with the offer to restart right

@@ -99,6 +99,27 @@ func envManagedReason(key string) string {
 	return "wird beim Start aus " + owner + " in der .env gesetzt"
 }
 
+// engineGroups are the catalogue groups the reference keeps on a page of its own, "Engine
+// Einstellungen"; everything else belongs to "Basiseinstellungen". The split lives here rather than
+// as an attribute per field, because it follows from the group and from nothing else.
+var engineGroups = map[string]bool{
+	"Multiplikatoren Spieler":        true,
+	"Multiplikatoren wilde Dinos":    true,
+	"Multiplikatoren gezähmte Dinos": true,
+}
+
+// groupsForScreen narrows the catalogue to one page. Saving works off the same narrowed set, which
+// is what keeps a save on one page from touching a field of the other.
+func groupsForScreen(all []settingGroup, engine bool) []settingGroup {
+	var out []settingGroup
+	for _, g := range all {
+		if engineGroups[g.Name] == engine {
+			out = append(out, g)
+		}
+	}
+	return out
+}
+
 var groupNotes = map[string]string{
 	"Multiplikatoren Spieler":        statArrayNote,
 	"Multiplikatoren wilde Dinos":    statArrayNote,

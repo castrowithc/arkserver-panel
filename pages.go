@@ -16,16 +16,63 @@ const tailLines = 300
 // is current, whether the restart reminder is up, and whether a restart can be offered at all
 // (without an RCON credential the panel must not offer one it cannot perform). SaveForm names the
 // form the head's save button submits, so a page that has no form simply leaves it empty.
+// Title is the page's own name, carried in the browser tab and in the fixed head, so a page can be
+// referred to by the same name the documentation uses for it.
 type pageChrome struct {
 	Active     string
+	Title      string
 	Pending    bool
 	CanRestart bool
 	SaveForm   string
 }
 
 func newChrome(cfg config, active string) pageChrome {
-	return pageChrome{Active: active, Pending: cfg.pending.get(), CanRestart: cfg.rcon.configured()}
+	return pageChrome{
+		Active:     active,
+		Title:      navTitles[active],
+		Pending:    cfg.pending.get(),
+		CanRestart: cfg.rcon.configured(),
+	}
 }
+
+// The navigation, grouped and named the way the reference screens are, so a page in the
+// documentation and a page in the panel can be talked about as the same thing. Own marks an entry
+// the reference has no counterpart for, rather than letting it pass as one of theirs.
+type navEntry struct {
+	Key   string
+	Path  string
+	Title string
+	Own   bool
+}
+
+type navSection struct {
+	Name    string
+	Entries []navEntry
+}
+
+var navigation = []navSection{
+	{Name: "Einstellungen", Entries: []navEntry{
+		{Key: "status", Path: "/", Title: "Status"},
+		{Key: "basis", Path: "/settings", Title: "Basiseinstellungen"},
+		{Key: "dateien", Path: "/files", Title: "Konfigurationsdateien"},
+		{Key: "logs", Path: "/logs", Title: "Logs"},
+		{Key: "engine", Path: "/engine", Title: "Engine Einstellungen"},
+	}},
+	{Name: "Administration", Entries: []navEntry{
+		{Key: "backup", Path: "/backups", Title: "Backup"},
+		{Key: "deployment", Path: "/env", Title: "Deployment", Own: true},
+	}},
+}
+
+var navTitles = func() map[string]string {
+	titles := map[string]string{}
+	for _, section := range navigation {
+		for _, e := range section.Entries {
+			titles[e.Key] = e.Title
+		}
+	}
+	return titles
+}()
 
 type filePage struct {
 	Chrome   pageChrome
@@ -61,7 +108,7 @@ func filesHandler(cfg config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		entries := withExistence(configFiles(cfg))
 		page := filePage{
-			Chrome:   newChrome(cfg, "files"),
+			Chrome:   newChrome(cfg, "dateien"),
 			Files:    entries,
 			Selected: selected(entries, r.URL.Query().Get("f")),
 		}
@@ -126,8 +173,26 @@ func saveFileHandler(cfg config) http.HandlerFunc {
 	}
 }
 
+// settingsScreen is one of the two generated form pages. They differ in the part of the catalogue
+// they show and in where they post; everything else about them is the same, so they share a handler
+// and a template rather than being copied.
+type settingsScreen struct {
+	Key    string
+	Path   string
+	Save   string
+	Engine bool
+}
+
+var (
+	basisScreen  = settingsScreen{Key: "basis", Path: "/settings", Save: "/settings/save"}
+	engineScreen = settingsScreen{Key: "engine", Path: "/engine", Save: "/engine/save", Engine: true}
+)
+
 type settingsPage struct {
 	Chrome pageChrome
+	// Action is where this page's form posts, which is what keeps a save on one screen from
+	// reaching the fields of the other.
+	Action string
 	Groups []settingGroup
 	Fields int
 	// Notices names a file the page could not read, so the greyed-out fields below have a reason.
@@ -139,10 +204,10 @@ type settingsPage struct {
 // settingsFormID ties the form to the save button in the fixed head above it.
 const settingsFormID = "settings-form"
 
-func newSettingsPage(cfg config, sources map[string]*iniSource, groups []settingGroup) settingsPage {
-	chrome := newChrome(cfg, "settings")
+func newSettingsPage(cfg config, screen settingsScreen, sources map[string]*iniSource, groups []settingGroup) settingsPage {
+	chrome := newChrome(cfg, screen.Key)
 	chrome.SaveForm = settingsFormID
-	page := settingsPage{Chrome: chrome, Groups: groups}
+	page := settingsPage{Chrome: chrome, Action: screen.Save, Groups: groups}
 	for _, g := range groups {
 		page.Fields += len(g.Rows)
 	}
@@ -154,10 +219,15 @@ func newSettingsPage(cfg config, sources map[string]*iniSource, groups []setting
 	return page
 }
 
-func settingsHandler(cfg config) http.HandlerFunc {
+func settingsHandler(cfg config, screen settingsScreen) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != screen.Path {
+			http.NotFound(w, r)
+			return
+		}
 		sources := loadINISources(cfg)
-		page := newSettingsPage(cfg, sources, buildGroups(sources))
+		groups := groupsForScreen(buildGroups(sources), screen.Engine)
+		page := newSettingsPage(cfg, screen, sources, groups)
 		switch n := r.URL.Query().Get("saved"); {
 		case r.URL.Query().Get("restarted") == "1":
 			page.Flash = "Gespeichert, der Server startet neu."
@@ -170,7 +240,7 @@ func settingsHandler(cfg config) http.HandlerFunc {
 	}
 }
 
-func saveSettingsHandler(cfg config) http.HandlerFunc {
+func saveSettingsHandler(cfg config, screen settingsScreen) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.Header().Set("Allow", http.MethodPost)
@@ -187,12 +257,14 @@ func saveSettingsHandler(cfg config) http.HandlerFunc {
 		}
 
 		sources := loadINISources(cfg)
-		groups := buildGroups(sources)
+		// Narrowed to this screen before anything is applied, so a field of the other page is never
+		// even considered, let alone written.
+		groups := groupsForScreen(buildGroups(sources), screen.Engine)
 		changed, ok := applyForm(sources, r.PostForm, groups)
 		if !ok {
 			// Nothing was written. The page comes back with the submitted values and the reasons,
 			// so the operator can correct rather than retype.
-			page := newSettingsPage(cfg, sources, groups)
+			page := newSettingsPage(cfg, screen, sources, groups)
 			page.Flash, page.Failed = "Nichts gespeichert: bitte die markierten Felder pruefen.", true
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			render(w, "settings.html", page)
@@ -218,10 +290,10 @@ func saveSettingsHandler(cfg config) http.HandlerFunc {
 				return
 			}
 			cfg.pending.clear()
-			http.Redirect(w, r, "/settings?restarted=1", http.StatusSeeOther)
+			http.Redirect(w, r, screen.Path+"?restarted=1", http.StatusSeeOther)
 			return
 		}
-		http.Redirect(w, r, "/settings?saved="+strconv.Itoa(changed), http.StatusSeeOther)
+		http.Redirect(w, r, screen.Path+"?saved="+strconv.Itoa(changed), http.StatusSeeOther)
 	}
 }
 
@@ -237,7 +309,7 @@ type backupPage struct {
 
 func backupsHandler(cfg config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		page := backupPage{Chrome: newChrome(cfg, "backups"), CanRestore: cfg.docker.configured()}
+		page := backupPage{Chrome: newChrome(cfg, "backup"), CanRestore: cfg.docker.configured()}
 		entries, err := listBackups(cfg)
 		if err != nil {
 			page.Flash, page.Failed = "Sicherungen nicht lesbar: "+err.Error(), true
@@ -340,7 +412,7 @@ type envPage struct {
 
 func envHandler(cfg config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		page := envPage{Chrome: newChrome(cfg, "env")}
+		page := envPage{Chrome: newChrome(cfg, "deployment")}
 		values, err := loadEnvValues(cfg)
 		if err != nil {
 			page.Flash, page.Failed = ".env nicht lesbar: "+err.Error(), true
