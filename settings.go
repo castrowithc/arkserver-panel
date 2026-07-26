@@ -3,13 +3,15 @@
 // reference host's configuration screens and checked against the INIs this server writes itself, so
 // the panel does not have to guess a key at runtime.
 //
-// The per-level stat arrays are the one part whose key names no source here attests: they are
-// indexed keys taken from knowledge of the game, and this deployment cannot attest them either,
-// because ARK leaves the Game.ini empty until an override exists and ignores an unknown key without
-// a word. They are carried anyway, with the reservation stated on their blocks, so a value that
-// does nothing is not mistaken for a setting that was made.
+// Every field records where it has actually been seen. "eigene INI" means this deployment's own
+// server wrote the key, "Referenz-INI" that a running reference server did, and "nur Formular" that
+// so far it has only ever appeared in a configuration screen and in no file. The per-level stat
+// arrays were the one part no file attested; a reference server's Game.ini now carries all 36 in
+// exactly the spelling written here.
 //
-// Deliberately absent: the procedural map parameters, which are moot for this deployment.
+// Deliberately absent: the procedural map parameters, which are moot for this deployment. Their
+// sixty-odd sliders are not keys of their own but components of one collected value,
+// PGTerrainPropertiesString.
 package main
 
 import (
@@ -34,9 +36,15 @@ type settingField struct {
 	Max     *float64 `json:"max,omitempty"`
 	Step    *float64 `json:"step,omitempty"`
 	Options []string `json:"options,omitempty"`
-	Group   string   `json:"group"`
-	// Proof records whether the key also occurs in this server's own INI or only in the reference
-	// export. It carries no behaviour, it keeps the origin of a field answerable.
+	// Ref is the value this field carried in the reference export. It is emphatically not a default:
+	// it is the state of the server that export came from, and that server was raised above stock in
+	// places. It is shown so an empty field says something about the order of magnitude expected
+	// there, and it is labelled as a reference wherever it appears.
+	Ref   string `json:"ref,omitempty"`
+	Group string `json:"group"`
+	// Proof records the strongest place the key has actually been seen: this deployment's own INI, a
+	// reference server's INI, or only a configuration screen. It carries no behaviour, it keeps the
+	// origin of a field answerable.
 	Proof string `json:"proof"`
 }
 

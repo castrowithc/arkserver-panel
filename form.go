@@ -65,14 +65,12 @@ type settingGroup struct {
 	Rows []settingRow
 }
 
-// statArrayNote hangs on the three multiplier blocks. Their field set and index mapping come from
-// the reference screens, their key names do not: those come from knowledge of the game, and this
-// deployment cannot attest them either, because ARK leaves the Game.ini empty until an override
-// exists and ignores a key it does not know without a word. So the block says so, rather than let a
-// value that does nothing pass for a setting that was made.
-const statArrayNote = "Die Key-Namen dieses Blocks sind an diesem Server nicht belegt: ein Wert " +
-	"wirkt nur, wenn der Key stimmt, und trifft er nicht zu, ignoriert ARK ihn stillschweigend. " +
-	"Der Faktor gilt auf den Zuwachs pro Stufe (1 = 5 pro Stufe, 4 = 20)."
+// statArrayNote hangs on the three multiplier blocks. It used to carry a reservation as well: the
+// key names came from knowledge of the game and no file here attested them, because ARK leaves the
+// Game.ini empty until an override exists and ignores an unknown key without a word. The Game.ini
+// of a running reference server now carries all 36 in exactly this spelling, so the reservation is
+// settled and what remains is the part that was always useful, namely what the factor applies to.
+const statArrayNote = "Der Faktor gilt auf den Zuwachs pro Stufe (1 = 5 pro Stufe, 4 = 20)."
 
 // envManagedKeys are the INI keys this deployment does not leave to the file. arkmanager holds them
 // in its own config, fed from the .env, and writes them into GameUserSettings.ini every time the
@@ -120,24 +118,55 @@ func (f settingField) kind() string {
 
 func num(v float64) string { return strconv.FormatFloat(v, 'g', -1, 64) }
 
-// hint tells the operator the bounds the save will enforce, in the words of the catalogue.
+// hint tells the operator the bounds the save will enforce, in the words of the catalogue, and what
+// the reference had in that field. The step is deliberately absent from the text: the field now
+// carries it as behaviour, and a number in prose that the arrows do not match reads as a
+// contradiction.
 func (f settingField) hint() string {
-	if f.kind() != "number" {
-		return ""
-	}
 	var parts []string
-	switch {
-	case f.Min != nil && f.Max != nil:
-		parts = append(parts, num(*f.Min)+" bis "+num(*f.Max))
-	case f.Min != nil:
-		parts = append(parts, "ab "+num(*f.Min))
-	case f.Max != nil:
-		parts = append(parts, "bis "+num(*f.Max))
+	if f.kind() == "number" {
+		switch {
+		case f.Min != nil && f.Max != nil:
+			parts = append(parts, num(*f.Min)+" bis "+num(*f.Max))
+		case f.Min != nil:
+			parts = append(parts, "ab "+num(*f.Min))
+		case f.Max != nil:
+			parts = append(parts, "bis "+num(*f.Max))
+		}
 	}
-	if f.Step != nil {
-		parts = append(parts, "Schritt "+num(*f.Step))
+	if f.Ref != "" {
+		parts = append(parts, "Referenz "+f.Ref)
 	}
 	return strings.Join(parts, ", ")
+}
+
+// MinAttr, MaxAttr and StepAttr are what the number field carries as attributes. They are methods
+// rather than fields because the catalogue holds them as pointers, which a template would render as
+// an address.
+//
+// StepAttr is the increment one arrow click moves, which is not the same as the catalogue's step:
+// that records the precision the source permits, and for five fields it is as fine as a millionth,
+// where stepping by it would be useless. A finer value stays typeable, because what a field may
+// carry is decided when it is saved and nowhere else.
+func (f settingField) MinAttr() string { return attr(f.Min) }
+func (f settingField) MaxAttr() string { return attr(f.Max) }
+
+func (f settingField) StepAttr() string {
+	switch {
+	case f.Step == nil:
+		return "1" // no step in the catalogue means the field counts whole units
+	case *f.Step < 0.001:
+		return "0.001"
+	default:
+		return num(*f.Step)
+	}
+}
+
+func attr(v *float64) string {
+	if v == nil {
+		return ""
+	}
+	return num(*v)
 }
 
 // toggleValue maps what the file says onto the three states the form offers. Anything that is
@@ -181,6 +210,15 @@ func buildGroups(sources map[string]*iniSource) []settingGroup {
 				row.Value = v
 				if !ok {
 					row.Locked = "Wert ist kein Wahrheitswert, im Roh-Editor zu klaeren"
+				}
+			}
+			// The same guard as above, for the same reason. A number field will not display a value
+			// it cannot parse: the browser shows the field empty instead, and an empty number field
+			// submitted back means "remove this key". So a value that is not a number is shown as it
+			// stands and left alone, rather than disappearing on the next save of the page.
+			if row.Set && row.Kind == "number" {
+				if _, err := strconv.ParseFloat(strings.TrimSpace(row.Value), 64); err != nil {
+					row.Locked = "Wert ist keine Zahl, im Roh-Editor zu klaeren"
 				}
 			}
 		}

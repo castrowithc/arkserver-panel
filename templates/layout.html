@@ -98,6 +98,10 @@
     .row input, .row select { font: inherit; width: 100%; box-sizing: border-box; padding: .3rem .5rem;
            border: 1px solid var(--line); border-radius: .35rem; background: transparent;
            color: inherit; }
+    /* A dropdown draws its option list from the control's own background. Left transparent, the
+       list is drawn on nothing: in a dark scheme the text then sits on the page behind it and is
+       legible only under the pointer, where the hover state puts a surface back. */
+    select, select option { background: Canvas; color: CanvasText; }
     .row.bad input, .row.bad select { border-color: #b3402f; }
     .row .why { grid-column: 1 / -1; font-size: .8rem; color: var(--muted); }
     .row.bad .why { color: #b3402f; }

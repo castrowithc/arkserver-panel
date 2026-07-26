@@ -12,9 +12,11 @@ bearbeitet die Dateien weiter direkt.
   Steam-Build. Aktualisiert sich selbst.
 - **Lifecycle:** Neu starten (RCON, mit Speichern), Stoppen und Starten.
 - **Einstellungen:** erzeugtes Formular über 246 Felder der beiden INIs, gruppiert und filterbar.
-  Ein leeres Feld heißt, dass der Key nicht in der Datei steht, und bleibt beim Speichern auch weg;
-  geschrieben wird nur, was geändert wurde. Die 36 Multiplikatoren pro Stufe tragen einen Vorbehalt:
-  ihre Key-Namen sind an diesem Server nicht belegt.
+  Ein leeres Feld heißt, dass der Key nicht in der Datei steht und der Wert des Spiels gilt, und
+  bleibt beim Speichern auch weg; geschrieben wird nur, was geändert wurde. Zahlenfelder tragen
+  Grenzen und Schrittweite, geprüft wird beim Speichern. 239 Felder nennen zusätzlich den Wert eines
+  fremden Beispielservers als Größenordnung, ausdrücklich nicht als Vorgabewert. 229 der 246
+  Felder sind durch eine laufende Installation belegt, 17 bisher nur durch ein Formular.
 - **Dateien:** Roh-Editor für `GameUserSettings.ini` und `Game.ini`. Nach dem Speichern erinnert das
   Panel daran, dass die Änderung erst mit einem Neustart greift.
 - **Logs:** read-only, jeweils das Ende der Datei.

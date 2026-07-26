@@ -122,3 +122,54 @@ func TestNormalizeLeavesTheBrowsersCheckboxWordToTheHandler(t *testing.T) {
 		t.Errorf("want a plain rejection, got %v", err)
 	}
 }
+
+// The reference values are carried so an empty field says something about the order of magnitude
+// expected there. They are not defaults, and the two places where they would mislead must stay
+// clear of them: a key the deployment owns cannot be edited anyway, and the catalogue itself
+// records one field whose reference value is the name of another field rather than a value.
+func TestReferenceValuesAreCarriedWhereTheyHelp(t *testing.T) {
+	byKey := map[string]settingField{}
+	withRef := 0
+	for _, f := range settingFields {
+		byKey[f.Key] = f
+		if f.Ref != "" {
+			withRef++
+		}
+	}
+	if withRef != 239 {
+		t.Errorf("want 239 fields with a reference value, got %d", withRef)
+	}
+	for key := range envManagedKeys {
+		if f, ok := byKey[key]; ok && f.Ref != "" {
+			t.Errorf("%s is owned by the deployment and read-only, so %q is noise", key, f.Ref)
+		}
+	}
+	if f, ok := byKey["BadWordListURL"]; ok && f.Ref != "" {
+		t.Errorf("the catalogue calls this reference value unusable, got %q", f.Ref)
+	}
+	if xp := byKey["XPMultiplier"]; xp.Ref == "" {
+		t.Error("a plain rate field should carry its reference value")
+	}
+}
+
+// Every field says where it has actually been seen, and the vocabulary is closed: a value outside
+// it means the catalogue was edited by hand somewhere instead of derived from the files.
+func TestEveryFieldRecordsWhereItWasSeen(t *testing.T) {
+	seen := map[string]int{"eigene INI": 0, "Referenz-INI": 0, "nur Formular": 0}
+	for _, f := range settingFields {
+		if _, ok := seen[f.Proof]; !ok {
+			t.Fatalf("%s records an unknown origin %q", f.ID, f.Proof)
+		}
+		seen[f.Proof]++
+	}
+	// The per-level multipliers were the one block no file attested. A reference server's Game.ini
+	// carries all 36, so none of them may fall back to the form-only case.
+	for _, f := range settingFields {
+		if strings.HasPrefix(f.Key, "PerLevelStatsMultiplier_") && f.Proof == "nur Formular" {
+			t.Errorf("%s is attested in a real Game.ini and should say so", f.Key)
+		}
+	}
+	if seen["nur Formular"] != 17 {
+		t.Errorf("want 17 fields seen only in a form, got %d", seen["nur Formular"])
+	}
+}

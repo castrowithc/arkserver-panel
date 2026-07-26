@@ -13,8 +13,10 @@
     <div class="jump" id="jump">
       {{range .Groups}}<a href="#{{.Anchor}}" data-for="{{.Anchor}}">{{.Name}}</a>{{end}}
     </div>
-    <p class="hint">Ein leeres Feld heißt: der Key steht nicht in der Datei. Gespeichert wird nur,
-      was geändert wurde.</p>
+    <p class="hint">Ein leeres Feld heißt: der Key steht nicht in der Datei, also gilt der Wert, den
+      das Spiel selbst mitbringt. Gespeichert wird nur, was geändert wurde.</p>
+    <p class="hint">„Referenz" ist der Wert, den ein fremder Beispielserver an dieser Stelle hatte.
+      Er zeigt die Größenordnung und ist ausdrücklich nicht der Vorgabewert des Spiels.</p>
   </aside>
 
   <main>
@@ -22,7 +24,10 @@
     {{range .Notices}}<div class="flash bad">{{.}}</div>{{end}}
     {{template "pending" .}}
 
-    <form method="post" action="/settings/save" id="settings-form">
+    {{/* novalidate: the bounds are checked on save, where a rejection can name the field and say
+         why. The browser's own check would refuse silently instead, and it would also refuse a
+         value that is already in the file but sits between two steps. */}}
+    <form method="post" action="/settings/save" id="settings-form" novalidate>
       {{range .Groups}}
         <section class="group" id="{{.Anchor}}">
           <h2>{{.Name}}</h2>
@@ -41,10 +46,14 @@
                   <option value="true" {{if and .Set (eq .Value "true")}}selected{{end}}>an</option>
                   <option value="false" {{if and .Set (eq .Value "false")}}selected{{end}}>aus</option>
                 </select>
+              {{else if eq .Kind "number"}}
+                <input type="number" name="{{.ID}}" id="{{.ID}}" value="{{.Value}}"
+                       step="{{.StepAttr}}"
+                       {{with .MinAttr}}min="{{.}}"{{end}}{{with .MaxAttr}} max="{{.}}"{{end}}
+                       inputmode="decimal" placeholder="nicht gesetzt">
               {{else}}
                 <input type="text" name="{{.ID}}" id="{{.ID}}" value="{{.Value}}"
-                       spellcheck="false" {{if eq .Kind "number"}}inputmode="decimal"{{end}}
-                       placeholder="nicht gesetzt">
+                       spellcheck="false" placeholder="nicht gesetzt">
               {{end}}
               {{if .Error}}<div class="why">{{.Error}}</div>
               {{else if .Locked}}<div class="why">{{.Locked}}</div>

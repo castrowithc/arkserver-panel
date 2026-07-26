@@ -300,3 +300,81 @@ func TestUnreadableFileIsReportedNotFatal(t *testing.T) {
 		t.Error("the page should name the file it could not read")
 	}
 }
+
+// The arrows have to move a field by an amount someone would actually reach for. The catalogue's
+// step says how precise a value may be, which is a different question: five fields allow a
+// millionth, and stepping by that would be a control nobody can use.
+func TestArrowStepIsUsable(t *testing.T) {
+	step := func(v float64) *float64 { return &v }
+	cases := []struct {
+		why   string
+		field settingField
+		want  string
+	}{
+		{"no step in the catalogue means whole units", settingField{}, "1"},
+		{"a usable step is taken as it stands", settingField{Step: step(0.1)}, "0.1"},
+		{"a hundredth is still usable", settingField{Step: step(0.01)}, "0.01"},
+		{"finer than a thousandth would be useless", settingField{Step: step(1e-06)}, "0.001"},
+	}
+	for _, c := range cases {
+		if got := c.field.StepAttr(); got != c.want {
+			t.Errorf("%s: want step %q, got %q", c.why, c.want, got)
+		}
+	}
+}
+
+// A number field is a number field, with its bounds and its arrows, and it says what the reference
+// had there. The wording matters as much as the value: "Referenz" is what keeps it from being read
+// as the value the game itself brings.
+func TestNumberFieldsCarryBoundsArrowsAndReference(t *testing.T) {
+	body := get(t, newRouter(filesFixture(t)), "/settings").Body.String()
+
+	for _, want := range []string{
+		`<input type="number" name="gameusersettings.autosaveperiodminutes"`,
+		`step="1"`,    // the catalogue gives this field no step, so it counts whole minutes
+		`min="5"`,     //
+		`max="180"`,   //
+		"Referenz 15", // what that field held in the export
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("the page is missing %q", want)
+		}
+	}
+	// The bounds are enforced when saving, where a rejection can name the field. Left to the
+	// browser, a value between two steps would be refused without a word.
+	if !strings.Contains(body, `id="settings-form" novalidate`) {
+		t.Error("the form relies on the browser's own validation again")
+	}
+}
+
+// A dropdown draws its list from the control's own background. Transparent, the list is drawn on
+// nothing, and in a dark scheme its text is legible only under the pointer.
+func TestDropdownOptionsHaveABackground(t *testing.T) {
+	body := get(t, newRouter(filesFixture(t)), "/settings").Body.String()
+	if !strings.Contains(body, "select, select option { background: Canvas; color: CanvasText; }") {
+		t.Error("the stylesheet no longer gives the option list a surface of its own")
+	}
+}
+
+// A number field refuses to display a value it cannot parse: the browser blanks it. Submitted back,
+// an empty number field means "remove this key", so a value the file already carries would vanish
+// on the next save without anyone touching it. Such a row is shown read-only instead.
+func TestAValueThatIsNotANumberIsNotOfferedAsANumberField(t *testing.T) {
+	cfg := filesFixture(t)
+	path := filepath.Join(cfg.dataDir, "GameUserSettings.ini")
+	content := readINI(t, cfg, "GameUserSettings.ini")
+	content = strings.Replace(content, "XPMultiplier=", "XPMultiplier=zwei mal ", 1)
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	body := get(t, newRouter(cfg), "/settings").Body.String()
+	row := body[strings.Index(body, `data-search="XPMultiplier`):]
+	row = row[:strings.Index(row, "</div>")+6]
+	if strings.Contains(row, `type="number"`) {
+		t.Error("a value that is not a number is offered as a number field, so saving would drop it")
+	}
+	if !strings.Contains(body, "Wert ist keine Zahl") {
+		t.Error("the page should say why the field cannot be edited")
+	}
+}

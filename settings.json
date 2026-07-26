@@ -7,7 +7,8 @@
     "key": "AllowHideDamageSourceFromLogs",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "eigene INI"
+    "proof": "eigene INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.allowsharedconnections",
@@ -17,7 +18,8 @@
     "key": "AllowSharedConnections",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.autosaveperiodminutes",
@@ -29,7 +31,8 @@
     "group": "Grundlagen",
     "proof": "eigene INI",
     "min": 5.0,
-    "max": 180.0
+    "max": 180.0,
+    "ref": "15"
   },
   {
     "id": "gameusersettings.crossarkallowforeigndinodownloads",
@@ -39,7 +42,8 @@
     "key": "CrossARKAllowForeignDinoDownloads",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.customdynamicconfigurl",
@@ -49,7 +53,7 @@
     "key": "CustomDynamicConfigUrl",
     "type": "text",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "nur Formular"
   },
   {
     "id": "gameusersettings.duration",
@@ -59,9 +63,10 @@
     "key": "Duration",
     "type": "number",
     "group": "Grundlagen",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 600.0
+    "max": 600.0,
+    "ref": "20"
   },
   {
     "id": "gameusersettings.greaterriftactivationmultiplier",
@@ -74,7 +79,8 @@
     "proof": "eigene INI",
     "min": 0.1,
     "max": 2.0,
-    "step": 1e-06
+    "step": 1e-06,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.kickidleplayersperiod",
@@ -86,7 +92,8 @@
     "group": "Grundlagen",
     "proof": "eigene INI",
     "min": 1.0,
-    "max": 1000000.0
+    "max": 1000000.0,
+    "ref": "2400"
   },
   {
     "id": "gameusersettings.message",
@@ -96,7 +103,8 @@
     "key": "Message",
     "type": "text",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "Welcome at example.invalid"
   },
   {
     "id": "gameusersettings.minimumdinoreuploadinterval",
@@ -106,8 +114,9 @@
     "key": "MinimumDinoReuploadInterval",
     "type": "number",
     "group": "Grundlagen",
-    "proof": "nur Referenz",
-    "min": 0.0
+    "proof": "Referenz-INI",
+    "min": 0.0,
+    "ref": "0"
   },
   {
     "id": "gameusersettings.preventdownloaddinos",
@@ -117,7 +126,8 @@
     "key": "PreventDownloadDinos",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.preventdownloaditems",
@@ -127,7 +137,8 @@
     "key": "PreventDownloadItems",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.preventdownloadsurvivors",
@@ -137,7 +148,8 @@
     "key": "PreventDownloadSurvivors",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.preventuploaddinos",
@@ -147,7 +159,8 @@
     "key": "PreventUploadDinos",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.preventuploaditems",
@@ -157,7 +170,8 @@
     "key": "PreventUploadItems",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.preventuploadsurvivors",
@@ -167,7 +181,8 @@
     "key": "PreventUploadSurvivors",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.serverautoforcerespawnwilddinosinterval",
@@ -177,8 +192,9 @@
     "key": "ServerAutoForceRespawnWildDinosInterval",
     "type": "number",
     "group": "Grundlagen",
-    "proof": "nur Referenz",
-    "min": 10000.0
+    "proof": "Referenz-INI",
+    "min": 10000.0,
+    "ref": "604800"
   },
   {
     "id": "gameusersettings.sessionname",
@@ -198,7 +214,8 @@
     "key": "ShowAnniversaryContent",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "eigene INI"
+    "proof": "eigene INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.spectatorpassword",
@@ -208,7 +225,7 @@
     "key": "SpectatorPassword",
     "type": "text",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "nur Formular"
   },
   {
     "id": "gameusersettings.tribelogdestroyedenemystructures",
@@ -218,7 +235,8 @@
     "key": "TribeLogDestroyedEnemyStructures",
     "type": "checkbox",
     "group": "Grundlagen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.tributecharacterexpirationseconds",
@@ -228,7 +246,7 @@
     "key": "TributeCharacterExpirationSeconds",
     "type": "number",
     "group": "Grundlagen",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0
   },
   {
@@ -239,8 +257,9 @@
     "key": "TributeDinoExpirationSeconds",
     "type": "number",
     "group": "Grundlagen",
-    "proof": "nur Referenz",
-    "min": 0.0
+    "proof": "Referenz-INI",
+    "min": 0.0,
+    "ref": "86400"
   },
   {
     "id": "gameusersettings.tributeitemexpirationseconds",
@@ -250,8 +269,9 @@
     "key": "TributeItemExpirationSeconds",
     "type": "number",
     "group": "Grundlagen",
-    "proof": "nur Referenz",
-    "min": 0.0
+    "proof": "Referenz-INI",
+    "min": 0.0,
+    "ref": "86400"
   },
   {
     "id": "game.autopvestarttimeseconds",
@@ -261,9 +281,10 @@
     "key": "AutoPvEStartTimeSeconds",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 86400.0
+    "max": 86400.0,
+    "ref": "0"
   },
   {
     "id": "game.autopvestoptimeseconds",
@@ -273,9 +294,10 @@
     "key": "AutoPvEStopTimeSeconds",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 86400.0
+    "max": 86400.0,
+    "ref": "0"
   },
   {
     "id": "game.ballowcustomrecipes",
@@ -285,7 +307,8 @@
     "key": "bAllowCustomRecipes",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "game.basehexagonrewardmultiplier",
@@ -295,10 +318,11 @@
     "key": "BaseHexagonRewardMultiplier",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 99.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "0.1"
   },
   {
     "id": "game.bautopvetimer",
@@ -308,7 +332,8 @@
     "key": "bAutoPvETimer",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bautopveusesystemtime",
@@ -318,7 +343,7 @@
     "key": "bAutoPvEUseSystemTime",
     "type": "select",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "options": [
       "true",
       "false"
@@ -332,7 +357,8 @@
     "key": "bDisableDefaultMapItemSets",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bdisablegenesismissions",
@@ -342,7 +368,8 @@
     "key": "bDisableGenesisMissions",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bdisablehexagonstore",
@@ -352,7 +379,8 @@
     "key": "bDisableHexagonStore",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bdisableworldbuffs",
@@ -362,7 +390,8 @@
     "key": "bDisableWorldBuffs",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.benableworldbuffscaling",
@@ -372,7 +401,8 @@
     "key": "bEnableWorldBuffScaling",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bhexstoreallowonlyengramtradeoption",
@@ -382,7 +412,8 @@
     "key": "bHexStoreAllowOnlyEngramTradeOption",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bpveallowtribewar",
@@ -392,7 +423,8 @@
     "key": "bPvEAllowTribeWar",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "game.bpveallowtribewarcancel",
@@ -402,7 +434,8 @@
     "key": "bPvEAllowTribeWarCancel",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.busesingleplayersettings",
@@ -412,7 +445,8 @@
     "key": "bUseSingleplayerSettings",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.craftxpmultiplier",
@@ -422,10 +456,11 @@
     "key": "CraftXPMultiplier",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 1000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.customrecipeeffectivenessmultiplier",
@@ -435,9 +470,10 @@
     "key": "CustomRecipeEffectivenessMultiplier",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.customrecipeskillmultiplier",
@@ -447,9 +483,10 @@
     "key": "CustomRecipeSkillMultiplier",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.genericxpmultiplier",
@@ -459,10 +496,11 @@
     "key": "GenericXPMultiplier",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 1000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.harvestxpmultiplier",
@@ -472,10 +510,11 @@
     "key": "HarvestXPMultiplier",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 1000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.hexagoncostmultiplier",
@@ -485,10 +524,11 @@
     "key": "HexagonCostMultiplier",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 999.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.killxpmultiplier",
@@ -498,10 +538,11 @@
     "key": "KillXPMultiplier",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 1000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.specialxpmultiplier",
@@ -511,10 +552,11 @@
     "key": "SpecialXPMultiplier",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 1000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.worldbuffscalingefficacy",
@@ -524,9 +566,10 @@
     "key": "WorldBuffScalingEfficacy",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 1.0,
-    "max": 100.0
+    "max": 100.0,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.adminlogging",
@@ -536,7 +579,8 @@
     "key": "AdminLogging",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.allowhitmarkers",
@@ -546,7 +590,8 @@
     "key": "AllowHitMarkers",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "eigene INI"
+    "proof": "eigene INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.alwaysnotifyplayerjoined",
@@ -556,7 +601,8 @@
     "key": "AlwaysNotifyPlayerJoined",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.alwaysnotifyplayerleft",
@@ -566,7 +612,8 @@
     "key": "AlwaysNotifyPlayerLeft",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.badwordlisturl",
@@ -576,7 +623,7 @@
     "key": "BadWordListURL",
     "type": "text",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI"
   },
   {
     "id": "gameusersettings.bfiltercharacternames",
@@ -586,7 +633,8 @@
     "key": "bFilterCharacterNames",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.bfilterchat",
@@ -596,7 +644,8 @@
     "key": "bFilterChat",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.bfiltertribenames",
@@ -606,7 +655,8 @@
     "key": "bFilterTribeNames",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.bfloatingnames",
@@ -616,7 +666,8 @@
     "key": "bFloatingNames",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "eigene INI"
+    "proof": "eigene INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.difficultyoffset",
@@ -626,10 +677,11 @@
     "key": "DifficultyOffset",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.5,
     "max": 5.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "0.5"
   },
   {
     "id": "gameusersettings.disablepvegamma",
@@ -639,7 +691,8 @@
     "key": "DisablePvEGamma",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.enablepvpgamma",
@@ -649,7 +702,8 @@
     "key": "EnablePvPGamma",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.globalvoicechat",
@@ -659,7 +713,8 @@
     "key": "GlobalVoiceChat",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.itemstacksizemultiplier",
@@ -671,7 +726,8 @@
     "group": "Gameplay und Chat",
     "proof": "eigene INI",
     "min": 1.0,
-    "max": 1000.0
+    "max": 1000.0,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.npcnetworkstasisrangescalepercentend",
@@ -681,10 +737,11 @@
     "key": "NPCNetworkStasisRangeScalePercentEnd",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 1.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "0.05"
   },
   {
     "id": "gameusersettings.npcnetworkstasisrangescaleplayercountend",
@@ -694,9 +751,10 @@
     "key": "NPCNetworkStasisRangeScalePlayerCountEnd",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 250.0
+    "max": 250.0,
+    "ref": "120"
   },
   {
     "id": "gameusersettings.npcnetworkstasisrangescaleplayercountstart",
@@ -706,9 +764,10 @@
     "key": "NPCNetworkStasisRangeScalePlayerCountStart",
     "type": "number",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 250.0
+    "max": 250.0,
+    "ref": "70"
   },
   {
     "id": "gameusersettings.preventofflinepvp",
@@ -718,7 +777,8 @@
     "key": "PreventOfflinePvP",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.proximitychat",
@@ -728,7 +788,7 @@
     "key": "ProximityChat",
     "type": "select",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "options": [
       "true",
       "false"
@@ -742,7 +802,8 @@
     "key": "ServerCrosshair",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "eigene INI"
+    "proof": "eigene INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.serverforcenohud",
@@ -752,7 +813,8 @@
     "key": "ServerForceNoHUD",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.serverhardcore",
@@ -762,7 +824,8 @@
     "key": "ServerHardcore",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.serverpve",
@@ -772,7 +835,8 @@
     "key": "ServerPVE",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.showfloatingdamagetext",
@@ -782,7 +846,8 @@
     "key": "ShowFloatingDamageText",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.usefjordurtraversalbuff",
@@ -792,7 +857,8 @@
     "key": "UseFjordurTraversalBuff",
     "type": "checkbox",
     "group": "Gameplay und Chat",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.xpmultiplier",
@@ -805,7 +871,8 @@
     "proof": "eigene INI",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.ballowplatformsaddlemultifloors",
@@ -815,7 +882,8 @@
     "key": "bAllowPlatformSaddleMultiFloors",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bdisablelootcrates",
@@ -825,7 +893,8 @@
     "key": "bDisableLootCrates",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bdisablestructureplacementcollision",
@@ -835,7 +904,8 @@
     "key": "bDisableStructurePlacementCollision",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bgenesisusestructurespreventionvolumes",
@@ -845,7 +915,8 @@
     "key": "bGenesisUseStructuresPreventionVolumes",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "game.bhardlimitturretsinrange",
@@ -855,7 +926,8 @@
     "key": "bHardLimitTurretsInRange",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "game.bignorestructurespreventionvolumes",
@@ -865,7 +937,8 @@
     "key": "bIgnoreStructuresPreventionVolumes",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.blimitturretsinrange",
@@ -875,7 +948,8 @@
     "key": "bLimitTurretsInRange",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "game.cropdecayspeedmultiplier",
@@ -885,9 +959,10 @@
     "key": "CropDecaySpeedMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.cropgrowthspeedmultiplier",
@@ -897,9 +972,10 @@
     "key": "CropGrowthSpeedMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.fastdecayinterval",
@@ -909,9 +985,10 @@
     "key": "FastDecayInterval",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 100.0
+    "step": 100.0,
+    "ref": "43200"
   },
   {
     "id": "game.fishinglootqualitymultiplier",
@@ -921,9 +998,10 @@
     "key": "FishingLootQualityMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 5.0
+    "max": 5.0,
+    "ref": "1"
   },
   {
     "id": "game.fuelconsumptionintervalmultiplier",
@@ -933,10 +1011,11 @@
     "key": "FuelConsumptionIntervalMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.1,
     "max": 999.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.globalcorpsedecompositiontimemultiplier",
@@ -946,9 +1025,10 @@
     "key": "GlobalCorpseDecompositionTimeMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.globalitemdecompositiontimemultiplier",
@@ -958,9 +1038,10 @@
     "key": "GlobalItemDecompositionTimeMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.globalpoweredbatterydurabilitydecreasepersecond",
@@ -970,10 +1051,11 @@
     "key": "GlobalPoweredBatteryDurabilityDecreasePerSecond",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0001,
     "max": 1000.0,
-    "step": 0.0001
+    "step": 0.0001,
+    "ref": "4"
   },
   {
     "id": "game.globalspoilingtimemultiplier",
@@ -983,9 +1065,10 @@
     "key": "GlobalSpoilingTimeMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.limitturretsnum",
@@ -995,8 +1078,9 @@
     "key": "LimitTurretsNum",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
-    "min": 0.0
+    "proof": "Referenz-INI",
+    "min": 0.0,
+    "ref": "100"
   },
   {
     "id": "game.limitturretsrange",
@@ -1006,8 +1090,9 @@
     "key": "LimitTurretsRange",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
-    "min": 10.0
+    "proof": "Referenz-INI",
+    "min": 10.0,
+    "ref": "10000"
   },
   {
     "id": "game.playerharvestingdamagemultiplier",
@@ -1017,10 +1102,11 @@
     "key": "PlayerHarvestingDamageMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 1000.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.pvpzonestructuredamagemultiplier",
@@ -1030,9 +1116,10 @@
     "key": "PvPZoneStructureDamageMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "6"
   },
   {
     "id": "game.resourcenoreplenishradiusstructures",
@@ -1042,10 +1129,11 @@
     "key": "ResourceNoReplenishRadiusStructures",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 99.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.structuredamagerepaircooldown",
@@ -1055,9 +1143,10 @@
     "key": "StructureDamageRepairCooldown",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 100000.0
+    "max": 100000.0,
+    "ref": "180"
   },
   {
     "id": "game.supplycratelootqualitymultiplier",
@@ -1067,9 +1156,10 @@
     "key": "SupplyCrateLootQualityMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 5.0
+    "max": 5.0,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.allowcavebuildingpve",
@@ -1079,7 +1169,8 @@
     "key": "AllowCaveBuildingPvE",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.allowcavebuildingpvp",
@@ -1089,7 +1180,8 @@
     "key": "AllowCaveBuildingPvP",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.allowintegratedsplusstructures",
@@ -1099,7 +1191,8 @@
     "key": "AllowIntegratedSPlusStructures",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "eigene INI"
+    "proof": "eigene INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.alwaysallowstructurepickup",
@@ -1109,7 +1202,8 @@
     "key": "AlwaysAllowStructurePickup",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.autodestroyoldstructuresmultiplier",
@@ -1119,10 +1213,11 @@
     "key": "AutoDestroyOldStructuresMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 10.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.clampresourceharvestdamage",
@@ -1132,7 +1227,8 @@
     "key": "ClampResourceHarvestDamage",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.daycyclespeedscale",
@@ -1142,10 +1238,11 @@
     "key": "DayCycleSpeedScale",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.001
+    "step": 0.001,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.daytimespeedscale",
@@ -1155,10 +1252,11 @@
     "key": "DayTimeSpeedScale",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.001
+    "step": 0.001,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.destroyunconnectedwaterpipes",
@@ -1168,7 +1266,8 @@
     "key": "DestroyUnconnectedWaterPipes",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.disablestructuredecaypve",
@@ -1178,7 +1277,8 @@
     "key": "DisableStructureDecayPvE",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.disableweatherfog",
@@ -1188,7 +1288,8 @@
     "key": "DisableWeatherFog",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.enableextrastructurepreventionvolumes",
@@ -1198,7 +1299,8 @@
     "key": "EnableExtraStructurePreventionVolumes",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.fastdecayunsnappedcorestructures",
@@ -1208,7 +1310,8 @@
     "key": "FastDecayUnsnappedCoreStructures",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.forceallstructurelocking",
@@ -1218,7 +1321,8 @@
     "key": "ForceAllStructureLocking",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.harvestamountmultiplier",
@@ -1228,10 +1332,11 @@
     "key": "HarvestAmountMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.harvesthealthmultiplier",
@@ -1241,10 +1346,11 @@
     "key": "HarvestHealthMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 1000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.maxgateframeonsaddles",
@@ -1254,10 +1360,11 @@
     "key": "MaxGateFrameOnSaddles",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 9999.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "2"
   },
   {
     "id": "gameusersettings.nighttimespeedscale",
@@ -1267,10 +1374,11 @@
     "key": "NightTimeSpeedScale",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.001
+    "step": 0.001,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.onlydecayunsnappedcorestructures",
@@ -1280,7 +1388,8 @@
     "key": "OnlyDecayUnsnappedCoreStructures",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.overridestructureplatformprevention",
@@ -1290,7 +1399,8 @@
     "key": "OverrideStructurePlatformPrevention",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.perplatformmaxstructuresmultiplier",
@@ -1303,7 +1413,8 @@
     "proof": "eigene INI",
     "min": 0.0,
     "max": 10.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.pveallowstructuresatsupplydrops",
@@ -1313,7 +1424,8 @@
     "key": "PvEAllowStructuresAtSupplyDrops",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.pvestructuredecayperiodmultiplier",
@@ -1323,9 +1435,10 @@
     "key": "PvEStructureDecayPeriodMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.pvpstructuredecay",
@@ -1335,7 +1448,8 @@
     "key": "PvPStructureDecay",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.pvpstructuredecayperiodmultiplier",
@@ -1345,9 +1459,10 @@
     "key": "PvPStructureDecayPeriodMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.randomsupplycratepoints",
@@ -1357,7 +1472,8 @@
     "key": "RandomSupplyCratePoints",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.resourcesrespawnperiodmultiplier",
@@ -1367,10 +1483,11 @@
     "key": "ResourcesRespawnPeriodMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 1000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.structuredamagemultiplier",
@@ -1380,10 +1497,11 @@
     "key": "StructureDamageMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.structurepickupholdduration",
@@ -1395,7 +1513,8 @@
     "group": "Welt und Strukturen",
     "proof": "eigene INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "0.5"
   },
   {
     "id": "gameusersettings.structurepickuptimeafterplacement",
@@ -1406,7 +1525,8 @@
     "type": "number",
     "group": "Welt und Strukturen",
     "proof": "eigene INI",
-    "min": 0.0
+    "min": 0.0,
+    "ref": "30"
   },
   {
     "id": "gameusersettings.structureresistancemultiplier",
@@ -1416,10 +1536,11 @@
     "key": "StructureResistanceMultiplier",
     "type": "number",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.themaxstructuresinrange",
@@ -1431,7 +1552,8 @@
     "group": "Welt und Strukturen",
     "proof": "eigene INI",
     "min": 1.0,
-    "max": 50000.0
+    "max": 50000.0,
+    "ref": "1300"
   },
   {
     "id": "gameusersettings.useoptimizedharvestinghealth",
@@ -1441,7 +1563,8 @@
     "key": "UseOptimizedHarvestingHealth",
     "type": "checkbox",
     "group": "Welt und Strukturen",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "game.ballowunlimitedrespecs",
@@ -1451,7 +1574,8 @@
     "key": "bAllowUnlimitedRespecs",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bautounlockallengrams",
@@ -1461,7 +1585,8 @@
     "key": "bAutoUnlockAllEngrams",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bdisablefriendlyfire",
@@ -1471,7 +1596,8 @@
     "key": "bDisableFriendlyFire",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bincreasepvprespawninterval",
@@ -1481,7 +1607,8 @@
     "key": "bIncreasePvPRespawnInterval",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bpvedisablefriendlyfire",
@@ -1491,7 +1618,8 @@
     "key": "bPvEDisableFriendlyFire",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bshowcreativemode",
@@ -1501,7 +1629,8 @@
     "key": "bShowCreativeMode",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.busecorpselocator",
@@ -1511,7 +1640,8 @@
     "key": "bUseCorpseLocator",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.hairgrowthspeedmultiplier",
@@ -1521,10 +1651,11 @@
     "key": "HairGrowthSpeedMultiplier",
     "type": "number",
     "group": "Charakter",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 9999.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.increasepvprespawnintervalbaseamount",
@@ -1534,9 +1665,10 @@
     "key": "IncreasePvPRespawnIntervalBaseAmount",
     "type": "number",
     "group": "Charakter",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 999.0
+    "max": 999.0,
+    "ref": "0"
   },
   {
     "id": "game.increasepvprespawnintervalcheckperiod",
@@ -1546,9 +1678,10 @@
     "key": "IncreasePvPRespawnIntervalCheckPeriod",
     "type": "number",
     "group": "Charakter",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 999.0
+    "max": 999.0,
+    "ref": "30"
   },
   {
     "id": "game.increasepvprespawnintervalmultiplier",
@@ -1558,9 +1691,10 @@
     "key": "IncreasePvPRespawnIntervalMultiplier",
     "type": "number",
     "group": "Charakter",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 999.0
+    "max": 999.0,
+    "ref": "1"
   },
   {
     "id": "game.maxalliancespertribe",
@@ -1570,9 +1704,10 @@
     "key": "MaxAlliancesPerTribe",
     "type": "number",
     "group": "Charakter",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 1.0,
-    "max": 200.0
+    "max": 200.0,
+    "ref": "10"
   },
   {
     "id": "game.maxnumberofplayersintribe",
@@ -1582,9 +1717,10 @@
     "key": "MaxNumberOfPlayersInTribe",
     "type": "number",
     "group": "Charakter",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 200.0
+    "max": 200.0,
+    "ref": "0"
   },
   {
     "id": "game.maxtribesperalliance",
@@ -1594,9 +1730,10 @@
     "key": "MaxTribesPerAlliance",
     "type": "number",
     "group": "Charakter",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 10.0
+    "max": 10.0,
+    "ref": "5"
   },
   {
     "id": "game.preventofflinepvpconnectioninvincibleinterval",
@@ -1606,9 +1743,10 @@
     "key": "PreventOfflinePvPConnectionInvincibleInterval",
     "type": "number",
     "group": "Charakter",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "5"
   },
   {
     "id": "game.resourcenoreplenishradiusplayers",
@@ -1618,10 +1756,11 @@
     "key": "ResourceNoReplenishRadiusPlayers",
     "type": "number",
     "group": "Charakter",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.usecorpselifespanmultiplier",
@@ -1631,10 +1770,11 @@
     "key": "UseCorpseLifeSpanMultiplier",
     "type": "number",
     "group": "Charakter",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0001,
     "max": 10000.0,
-    "step": 0.0001
+    "step": 0.0001,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.allowteksuitpowersingenesis",
@@ -1644,7 +1784,8 @@
     "key": "AllowTekSuitPowersInGenesis",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.allowthirdpersonplayer",
@@ -1654,7 +1795,8 @@
     "key": "AllowThirdPersonPlayer",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "eigene INI"
+    "proof": "eigene INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.nonpermanentdiseases",
@@ -1664,7 +1806,8 @@
     "key": "NonPermanentDiseases",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.playercharacterfooddrainmultiplier",
@@ -1674,10 +1817,11 @@
     "key": "PlayerCharacterFoodDrainMultiplier",
     "type": "number",
     "group": "Charakter",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 99.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.playercharacterhealthrecoverymultiplier",
@@ -1687,10 +1831,11 @@
     "key": "PlayerCharacterHealthRecoveryMultiplier",
     "type": "number",
     "group": "Charakter",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 10000.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.playercharacterstaminadrainmultiplier",
@@ -1700,10 +1845,11 @@
     "key": "PlayerCharacterStaminaDrainMultiplier",
     "type": "number",
     "group": "Charakter",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 10000.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.playercharacterwaterdrainmultiplier",
@@ -1713,10 +1859,11 @@
     "key": "PlayerCharacterWaterDrainMultiplier",
     "type": "number",
     "group": "Charakter",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 99.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.playerdamagemultiplier",
@@ -1726,10 +1873,11 @@
     "key": "PlayerDamageMultiplier",
     "type": "number",
     "group": "Charakter",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 10000.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.playerresistancemultiplier",
@@ -1739,10 +1887,11 @@
     "key": "PlayerResistanceMultiplier",
     "type": "number",
     "group": "Charakter",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 10000.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.preventdiseases",
@@ -1752,7 +1901,8 @@
     "key": "PreventDiseases",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.preventspawnanimations",
@@ -1762,7 +1912,8 @@
     "key": "PreventSpawnAnimations",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.preventtribealliances",
@@ -1772,7 +1923,8 @@
     "key": "PreventTribeAlliances",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.showmapplayerlocation",
@@ -1782,7 +1934,8 @@
     "key": "ShowMapPlayerLocation",
     "type": "checkbox",
     "group": "Charakter",
-    "proof": "eigene INI"
+    "proof": "eigene INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.tribenamechangecooldown",
@@ -1794,7 +1947,8 @@
     "group": "Charakter",
     "proof": "eigene INI",
     "min": 0.0,
-    "max": 9999.0
+    "max": 9999.0,
+    "ref": "15"
   },
   {
     "id": "game.babycuddlegraceperiodmultiplier",
@@ -1804,10 +1958,11 @@
     "key": "BabyCuddleGracePeriodMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 200.0,
-    "step": 0.5
+    "step": 0.5,
+    "ref": "1"
   },
   {
     "id": "game.babycuddleintervalmultiplier",
@@ -1817,10 +1972,11 @@
     "key": "BabyCuddleIntervalMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 200.0,
-    "step": 0.0001
+    "step": 0.0001,
+    "ref": "1"
   },
   {
     "id": "game.babycuddleloseimprintqualityspeedmultiplier",
@@ -1830,10 +1986,11 @@
     "key": "BabyCuddleLoseImprintQualitySpeedMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 200.0,
-    "step": 0.5
+    "step": 0.5,
+    "ref": "1"
   },
   {
     "id": "game.babyfoodconsumptionspeedmultiplier",
@@ -1843,10 +2000,11 @@
     "key": "BabyFoodConsumptionSpeedMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 99.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.babyimprintamountmultiplier",
@@ -1856,10 +2014,11 @@
     "key": "BabyImprintAmountMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 99.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.babyimprintingstatscalemultiplier",
@@ -1869,10 +2028,11 @@
     "key": "BabyImprintingStatScaleMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 200.0,
-    "step": 1e-05
+    "step": 1e-05,
+    "ref": "1"
   },
   {
     "id": "game.babymaturespeedmultiplier",
@@ -1882,9 +2042,10 @@
     "key": "BabyMatureSpeedMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.ballowflyerspeedleveling",
@@ -1894,7 +2055,8 @@
     "key": "bAllowFlyerSpeedLeveling",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bflyerplatformallowunaligneddinobasing",
@@ -1904,7 +2066,8 @@
     "key": "bFlyerPlatformAllowUnalignedDinoBasing",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.bpassivedefensesdamageriderlessdinos",
@@ -1914,7 +2077,8 @@
     "key": "bPassiveDefensesDamageRiderlessDinos",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "Export"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "game.dinoharvestingdamagemultiplier",
@@ -1924,9 +2088,10 @@
     "key": "DinoHarvestingDamageMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "3"
   },
   {
     "id": "game.dinoturretdamagemultiplier",
@@ -1936,9 +2101,10 @@
     "key": "DinoTurretDamageMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.egghatchspeedmultiplier",
@@ -1948,9 +2114,10 @@
     "key": "EggHatchSpeedMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.layeggintervalmultiplier",
@@ -1960,9 +2127,10 @@
     "key": "LayEggIntervalMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.matingintervalmultiplier",
@@ -1972,9 +2140,10 @@
     "key": "MatingIntervalMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.matingspeedmultiplier",
@@ -1984,9 +2153,10 @@
     "key": "MatingSpeedMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 999.0
+    "max": 999.0,
+    "ref": "1"
   },
   {
     "id": "game.passivetameintervalmultiplier",
@@ -1996,10 +2166,11 @@
     "key": "PassiveTameIntervalMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 9999.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.poopintervalmultiplier",
@@ -2009,9 +2180,10 @@
     "key": "PoopIntervalMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "game.tameddinocharacterfooddrainmultiplier",
@@ -2021,9 +2193,10 @@
     "key": "TamedDinoCharacterFoodDrainMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 9999.0
+    "max": 9999.0,
+    "ref": "1"
   },
   {
     "id": "game.tameddinotorpordrainmultiplier",
@@ -2033,9 +2206,10 @@
     "key": "TamedDinoTorporDrainMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 9999.0
+    "max": 9999.0,
+    "ref": "1"
   },
   {
     "id": "game.wilddinocharacterfooddrainmultiplier",
@@ -2045,10 +2219,11 @@
     "key": "WildDinoCharacterFoodDrainMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 9999.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.wilddinotorpordrainmultiplier",
@@ -2058,9 +2233,10 @@
     "key": "WildDinoTorporDrainMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "Export",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 9999.0
+    "max": 9999.0,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.allowanyonebabyimprintcuddle",
@@ -2070,7 +2246,8 @@
     "key": "AllowAnyoneBabyImprintCuddle",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.allowflyercarrypve",
@@ -2080,7 +2257,8 @@
     "key": "AllowFlyerCarryPvE",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.allowflyingstaminarecovery",
@@ -2090,7 +2268,8 @@
     "key": "AllowFlyingStaminaRecovery",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.allowraiddinofeeding",
@@ -2100,7 +2279,8 @@
     "key": "AllowRaidDinoFeeding",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.autodestroydecayeddinos",
@@ -2110,7 +2290,8 @@
     "key": "AutoDestroyDecayedDinos",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.bforcecanridefliers",
@@ -2120,7 +2301,8 @@
     "key": "bForceCanRideFliers",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "an"
   },
   {
     "id": "gameusersettings.dinocharacterfooddrainmultiplier",
@@ -2130,10 +2312,11 @@
     "key": "DinoCharacterFoodDrainMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.dinocharacterhealthrecoverymultiplier",
@@ -2143,10 +2326,11 @@
     "key": "DinoCharacterHealthRecoveryMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.dinocharacterstaminadrainmultiplier",
@@ -2156,10 +2340,11 @@
     "key": "DinoCharacterStaminaDrainMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.dinocountmultiplier",
@@ -2169,10 +2354,11 @@
     "key": "DinoCountMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.8,
     "max": 3.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "0.8"
   },
   {
     "id": "gameusersettings.dinodamagemultiplier",
@@ -2182,10 +2368,11 @@
     "key": "DinoDamageMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.dinoresistancemultiplier",
@@ -2195,10 +2382,11 @@
     "key": "DinoResistanceMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "nur Formular",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.disabledinodecaypve",
@@ -2208,7 +2396,8 @@
     "key": "DisableDinoDecayPvE",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.disableimprintdinobuff",
@@ -2218,7 +2407,8 @@
     "key": "DisableImprintDinoBuff",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.enablecryosicknesspve",
@@ -2228,7 +2418,8 @@
     "key": "EnableCryoSicknessPVE",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.maxpersonaltameddinos",
@@ -2238,9 +2429,10 @@
     "key": "MaxPersonalTamedDinos",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 10000.0
+    "max": 10000.0,
+    "ref": "500"
   },
   {
     "id": "gameusersettings.maxplatformsaddlestructurelimit",
@@ -2250,9 +2442,10 @@
     "key": "MaxPlatformSaddleStructureLimit",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 20000.0
+    "max": 20000.0,
+    "ref": "1000"
   },
   {
     "id": "gameusersettings.maxtameddinos",
@@ -2264,7 +2457,8 @@
     "group": "Dinos",
     "proof": "eigene INI",
     "min": 0.0,
-    "max": 50000.0
+    "max": 50000.0,
+    "ref": "1000"
   },
   {
     "id": "gameusersettings.personaltameddinossaddlestructurecost",
@@ -2274,9 +2468,10 @@
     "key": "PersonalTamedDinosSaddleStructureCost",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "max": 100.0
+    "max": 100.0,
+    "ref": "19"
   },
   {
     "id": "gameusersettings.preventmateboost",
@@ -2286,7 +2481,8 @@
     "key": "PreventMateBoost",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.pvedinodecayperiodmultiplier",
@@ -2299,7 +2495,8 @@
     "proof": "eigene INI",
     "min": 0.0,
     "max": 999999.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.pvpdinodecay",
@@ -2309,7 +2506,8 @@
     "key": "PvPDinoDecay",
     "type": "checkbox",
     "group": "Dinos",
-    "proof": "nur Referenz"
+    "proof": "Referenz-INI",
+    "ref": "aus"
   },
   {
     "id": "gameusersettings.raiddinocharacterfooddrainmultiplier",
@@ -2322,7 +2520,8 @@
     "proof": "eigene INI",
     "min": 0.0,
     "max": 99.0,
-    "step": 0.01
+    "step": 0.01,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.tameddinocharacterhealthrecoverymultiplier",
@@ -2332,10 +2531,11 @@
     "key": "TamedDinoCharacterHealthRecoveryMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.tameddinodamagemultiplier",
@@ -2345,10 +2545,11 @@
     "key": "TamedDinoDamageMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.tameddinoresistancemultiplier",
@@ -2358,10 +2559,11 @@
     "key": "TamedDinoResistanceMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "gameusersettings.tamingspeedmultiplier",
@@ -2371,10 +2573,11 @@
     "key": "TamingSpeedMultiplier",
     "type": "number",
     "group": "Dinos",
-    "proof": "nur Referenz",
+    "proof": "Referenz-INI",
     "min": 0.0,
     "max": 100000.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[0]",
@@ -2384,9 +2587,10 @@
     "key": "PerLevelStatsMultiplier_Player[0]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[1]",
@@ -2396,9 +2600,10 @@
     "key": "PerLevelStatsMultiplier_Player[1]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[2]",
@@ -2408,9 +2613,10 @@
     "key": "PerLevelStatsMultiplier_Player[2]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[3]",
@@ -2420,9 +2626,10 @@
     "key": "PerLevelStatsMultiplier_Player[3]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[4]",
@@ -2432,9 +2639,10 @@
     "key": "PerLevelStatsMultiplier_Player[4]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[5]",
@@ -2444,9 +2652,10 @@
     "key": "PerLevelStatsMultiplier_Player[5]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[6]",
@@ -2456,9 +2665,10 @@
     "key": "PerLevelStatsMultiplier_Player[6]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[7]",
@@ -2468,9 +2678,10 @@
     "key": "PerLevelStatsMultiplier_Player[7]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.2"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[8]",
@@ -2480,9 +2691,10 @@
     "key": "PerLevelStatsMultiplier_Player[8]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.2"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[9]",
@@ -2492,9 +2704,10 @@
     "key": "PerLevelStatsMultiplier_Player[9]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[10]",
@@ -2504,9 +2717,10 @@
     "key": "PerLevelStatsMultiplier_Player[10]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_player[11]",
@@ -2516,9 +2730,10 @@
     "key": "PerLevelStatsMultiplier_Player[11]",
     "type": "number",
     "group": "Multiplikatoren Spieler",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[0]",
@@ -2528,9 +2743,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[0]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[1]",
@@ -2540,9 +2756,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[1]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[2]",
@@ -2552,9 +2769,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[2]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[3]",
@@ -2564,9 +2782,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[3]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[4]",
@@ -2576,9 +2795,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[4]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[5]",
@@ -2588,9 +2808,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[5]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[6]",
@@ -2600,9 +2821,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[6]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[7]",
@@ -2612,9 +2834,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[7]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[8]",
@@ -2624,9 +2847,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[8]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[9]",
@@ -2636,9 +2860,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[9]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[10]",
@@ -2648,9 +2873,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[10]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinowild[11]",
@@ -2660,9 +2886,10 @@
     "key": "PerLevelStatsMultiplier_DinoWild[11]",
     "type": "number",
     "group": "Multiplikatoren wilde Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[0]",
@@ -2672,9 +2899,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[0]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "0.2"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[1]",
@@ -2684,9 +2912,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[1]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[2]",
@@ -2696,9 +2925,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[2]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[3]",
@@ -2708,9 +2938,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[3]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[4]",
@@ -2720,9 +2951,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[4]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[5]",
@@ -2732,9 +2964,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[5]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[6]",
@@ -2744,9 +2977,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[6]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[7]",
@@ -2756,9 +2990,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[7]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[8]",
@@ -2768,9 +3003,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[8]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "0.17"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[9]",
@@ -2780,9 +3016,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[9]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[10]",
@@ -2792,9 +3029,10 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[10]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   },
   {
     "id": "game.perlevelstatsmultiplier_dinotamed[11]",
@@ -2804,8 +3042,9 @@
     "key": "PerLevelStatsMultiplier_DinoTamed[11]",
     "type": "number",
     "group": "Multiplikatoren gezähmte Dinos",
-    "proof": "Key-Name nicht belegt",
+    "proof": "Referenz-INI",
     "min": 0.0,
-    "step": 0.1
+    "step": 0.1,
+    "ref": "1.0"
   }
 ]
