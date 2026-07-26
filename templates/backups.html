@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>{{template "head" .}}</head>
+<body>
+  {{template "topbar" .Chrome}}
+  <aside class="sidebar">{{template "navlinks" .Chrome.Active}}</aside>
+
+  <main>
+    {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
+    {{template "pending" .}}
+
+    <p class="hint">
+      Sicherungen entstehen von allein: alle sechs Stunden, vor jedem Update und bei jedem Stop des
+      Servers. Das Panel legt selbst keine an. Jedes Archiv enthält den Welt-Stand, die
+      Spielerprofile und beide INI-Dateien. Zum Herunterladen gedacht, denn auf dem Server teilt eine
+      Sicherung das Schicksal der Welt, die sie sichern soll.
+    </p>
+
+    {{if not .CanRestore}}
+      <p class="hint">
+        Zurückspielen ist nicht verfügbar: dafür muss das Panel den Server stoppen können, und dazu
+        fehlt der Docker-Zugriff.
+      </p>
+    {{end}}
+
+    {{if not .Backups}}
+      <p class="muted">Noch keine Sicherungen vorhanden.</p>
+    {{else}}
+      <table class="list">
+        <thead>
+          <tr>
+            <th>Zeitpunkt</th>
+            <th>Größe</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Backups}}
+            <tr>
+              <td>
+                {{.Time}}
+                <span class="file">{{.Name}}</span>
+              </td>
+              <td class="right">{{.Size}}</td>
+              <td class="right">
+                <a class="dl" href="/backups/download?b={{.ID}}">Herunterladen</a>
+                {{if $.CanRestore}}
+                  <form method="post" action="/backups/restore" class="inline"
+                        onsubmit="return confirm('Sicherung vom {{.Time}} zurückspielen?\n\nDer Server wird gestoppt. Welt-Stand, Spielerprofile und beide INI-Dateien werden durch den Stand dieser Sicherung ersetzt: die Einstellungen gehen also ebenfalls auf diesen Stand zurück.\n\nDas dauert einige Minuten.')">
+                    <input type="hidden" name="b" value="{{.ID}}">
+                    <button type="submit">Zurückspielen</button>
+                  </form>
+                {{end}}
+              </td>
+            </tr>
+          {{end}}
+        </tbody>
+      </table>
+    {{end}}
+  </main>
+</body>
+</html>

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -220,6 +221,108 @@ func saveSettingsHandler(cfg config) http.HandlerFunc {
 			return
 		}
 		http.Redirect(w, r, "/settings?saved="+strconv.Itoa(changed), http.StatusSeeOther)
+	}
+}
+
+type backupPage struct {
+	Chrome  pageChrome
+	Backups []backupEntry
+	// CanRestore is false without Docker access. A restore has to stop the server and start it
+	// again, and unpacking underneath a running server would look like it worked and change nothing.
+	CanRestore bool
+	Flash      string
+	Failed     bool
+}
+
+func backupsHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		page := backupPage{Chrome: newChrome(cfg, "backups"), CanRestore: cfg.docker.configured()}
+		entries, err := listBackups(cfg)
+		if err != nil {
+			page.Flash, page.Failed = "Sicherungen nicht lesbar: "+err.Error(), true
+		}
+		page.Backups = entries
+		if n := r.URL.Query().Get("restored"); n != "" {
+			page.Flash = n + " Datei(en) zurückgespielt, der Server läuft wieder."
+		}
+		render(w, "backups.html", page)
+	}
+}
+
+// downloadBackup hands the archive out as a file. Only this makes it a backup in any real sense: on
+// the volume it shares the fate of the world it is meant to protect.
+func downloadBackupHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		entries, err := listBackups(cfg)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		entry, ok := findBackup(entries, r.URL.Query().Get("b"))
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		f, err := os.Open(entry.path(cfg))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer f.Close()
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", entry.Name))
+		http.ServeContent(w, r, entry.Name, entry.modTime, f)
+	}
+}
+
+func restoreBackupHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if !sameOrigin(r) {
+			http.Error(w, "cross-site request rejected", http.StatusForbidden)
+			return
+		}
+		if !cfg.docker.configured() {
+			http.Error(w, "ohne Docker-Zugriff kann das Panel den Server nicht stoppen", http.StatusForbidden)
+			return
+		}
+		entries, err := listBackups(cfg)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		entry, ok := findBackup(entries, r.FormValue("b"))
+		if !ok {
+			http.Error(w, "unbekannte Sicherung", http.StatusNotFound)
+			return
+		}
+
+		// Stopping first is what makes the restore stick, and it has a second effect worth having:
+		// with BACKUP_ON_STOP the shutdown writes one more backup of the current world, so the state
+		// about to be overwritten is itself saved before it goes.
+		if err := cfg.docker.stop(); err != nil {
+			http.Error(w, "Server stoppen: "+err.Error(), http.StatusBadGateway)
+			return
+		}
+		restored, restoreErr := restoreBackup(cfg, entry)
+		// Start again in either case: leaving the deployment down after a failed restore would turn
+		// one problem into two.
+		if err := cfg.docker.start(); err != nil {
+			http.Error(w, "Server startet nicht mehr: "+err.Error(), http.StatusBadGateway)
+			return
+		}
+		if restoreErr != nil {
+			http.Error(w, "Zurückspielen fehlgeschlagen, der Server läuft wieder: "+restoreErr.Error(), http.StatusInternalServerError)
+			return
+		}
+		// The files on disk are the archive's now, so a "saved but not yet in effect" marker from
+		// before is meaningless.
+		cfg.pending.clear()
+		http.Redirect(w, r, "/backups?restored="+strconv.Itoa(restored), http.StatusSeeOther)
 	}
 }
 

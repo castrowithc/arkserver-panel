@@ -76,9 +76,14 @@ func saveTextFile(path, content string) error {
 	if resolved, err := filepath.EvalSymlinks(path); err == nil {
 		target = resolved
 	}
+	return writeFileAtomic(target, strings.NewReader(normalizeNewlines(content)))
+}
 
-	// Keep the existing permissions. The config files are mode 600 and owned by the server user,
-	// and a save must not loosen that.
+// writeFileAtomic writes r to target through a temp file in the same directory and a single rename,
+// so nothing ever reads a half-written file. It keeps the permissions the target already has: the
+// server's files are mode 600 and owned by the server user, and neither a save nor a restore may
+// loosen that. A file that is not there yet is created the same way.
+func writeFileAtomic(target string, r io.Reader) error {
 	mode := os.FileMode(0o600)
 	if info, err := os.Stat(target); err == nil {
 		mode = info.Mode().Perm()
@@ -91,7 +96,7 @@ func saveTextFile(path, content string) error {
 	}
 	defer os.Remove(tmp.Name()) // no-op once the rename succeeded
 
-	if _, err := tmp.WriteString(normalizeNewlines(content)); err != nil {
+	if _, err := io.Copy(tmp, r); err != nil {
 		tmp.Close()
 		return err
 	}

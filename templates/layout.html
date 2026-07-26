@@ -67,6 +67,16 @@
     .flash.pending .actions { margin-top: .6rem }
     .hint { font-size: .85rem; color: var(--muted); margin: .5rem 0 0; }
 
+    /* Backup list */
+    table.list { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    table.list th { text-align: left; font-size: .8rem; font-weight: 600; color: var(--muted);
+                    text-transform: uppercase; letter-spacing: .04em; padding: .4rem .5rem; }
+    table.list td { padding: .5rem; border-top: 1px solid var(--line); vertical-align: baseline; }
+    table.list td.right { text-align: right; white-space: nowrap; }
+    table.list .file { font: 12px/1.4 ui-monospace, monospace; color: var(--muted);
+                       word-break: break-all; }
+    table.list a.dl { color: inherit; }
+
     /* Settings form */
     .filter { width: 100%; box-sizing: border-box; font: inherit; padding: .4rem .6rem;
               border: 1px solid var(--line); border-radius: .35rem; background: transparent;
@@ -133,6 +143,7 @@
   <a href="/settings" {{if eq . "settings"}}class="active"{{end}}>Einstellungen</a>
   <a href="/files" {{if eq . "files"}}class="active"{{end}}>Dateien</a>
   <a href="/logs" {{if eq . "logs"}}class="active"{{end}}>Logs</a>
+  <a href="/backups" {{if eq . "backups"}}class="active"{{end}}>Sicherungen</a>
 </nav>
 {{end}}
 

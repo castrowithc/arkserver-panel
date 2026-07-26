@@ -18,9 +18,13 @@ bearbeitet die Dateien weiter direkt.
   Panel daran, dass die Änderung erst mit einem Neustart greift.
 - **Logs:** read-only, jeweils das Ende der Datei.
 - **`.env`:** read-only, Passwortwerte maskiert.
+- **Sicherungen:** die vorhandenen Archive auflisten, herunterladen und eines zurückspielen. Das
+  Zurückspielen stoppt den Server, ersetzt genau die Dateien aus dem Archiv (Welt-Stand,
+  Spielerprofile und beide INIs) und startet ihn wieder.
 
 Bewusst nicht drin: die Stat-Multiplikatoren pro Stufe und die Parameter prozeduraler Karten (ihre
-Key-Namen sind nicht belegt), schreibende `.env`, Mods-Browser, geplante Neustarts, Backup-Manager.
+Key-Namen sind nicht belegt), schreibende `.env`, Mods-Browser, geplante Neustarts. Sicherungen legt
+das Panel nicht selbst an: das erledigt der Server per Cron, vor jedem Update und bei jedem Stop.
 
 ## Betrieb
 Im Deployment steckt der Dienst im Compose-Profil `panel`, zusammen mit einem pfadgefilterten

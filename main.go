@@ -176,6 +176,9 @@ func newRouter(cfg config) http.Handler {
 	app.HandleFunc("/files", filesHandler(cfg))
 	app.HandleFunc("/files/save", saveFileHandler(cfg))
 	app.HandleFunc("/logs", logsHandler(cfg))
+	app.HandleFunc("/backups", backupsHandler(cfg))
+	app.HandleFunc("/backups/download", downloadBackupHandler(cfg))
+	app.HandleFunc("/backups/restore", restoreBackupHandler(cfg))
 	app.HandleFunc("/restart", action(func() error {
 		if err := restartServer(cfg.rcon); err != nil {
 			return err
