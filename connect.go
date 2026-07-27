@@ -35,7 +35,11 @@ type connectInfo struct {
 	// PublicUnset says the operator has not named the outside address, so the page can say what to
 	// set instead of leaving a gap.
 	PublicUnset bool
-	Known       bool
+	// LANUnset means the address inside the local network could not be worked out, which is the
+	// normal case when the panel is opened as localhost. The page then says how to find it, because
+	// this is exactly the address a second device in the same household needs.
+	LANUnset bool
+	Known    bool
 }
 
 // gatherConnect builds the addresses. requestHost is the Host the browser used, which carries the
@@ -49,8 +53,14 @@ func gatherConnect(cfg config, st containerState, requestHost string) connectInf
 	}
 
 	info := connectInfo{GamePort: game, QueryPort: query, Known: true, Local: net.JoinHostPort("127.0.0.1", game)}
-	if host := hostOnly(requestHost); host != "" && !isLoopback(host) {
+	switch host := hostOnly(requestHost); {
+	case cfg.lanHost != "":
+		info.LAN = net.JoinHostPort(hostOnly(cfg.lanHost), game)
+	case host != "" && !isLoopback(host):
+		// The address the browser used is by definition one that works from where the operator sits.
 		info.LAN = net.JoinHostPort(host, game)
+	default:
+		info.LANUnset = true
 	}
 	switch {
 	case cfg.publicHost != "":

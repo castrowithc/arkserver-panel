@@ -72,3 +72,25 @@ func TestConnectTakesTheOutsideAddressFromTheOperator(t *testing.T) {
 		t.Errorf("public %q", info.Public)
 	}
 }
+
+func TestConnectNamesTheLocalNetworkAddressWhenTheOperatorPinnedIt(t *testing.T) {
+	st := stateWithPorts(map[string]string{gamePortInContainer: "7777"})
+
+	// The usual case: the panel is published on the loopback, so it is opened as localhost, and
+	// localhost says nothing about the network. Without a pinned address the page has to say so.
+	info := gatherConnect(config{}, st, "127.0.0.1:8080")
+	if !info.LANUnset || info.LAN != "" {
+		t.Errorf("localhost produced a network address: %+v", info)
+	}
+
+	info = gatherConnect(config{lanHost: "192.168.178.20"}, st, "127.0.0.1:8080")
+	if info.LANUnset || info.LAN != "192.168.178.20:7777" {
+		t.Errorf("lan %q (unset=%v)", info.LAN, info.LANUnset)
+	}
+
+	// A pinned address wins over the one the browser used, because the operator set it on purpose.
+	info = gatherConnect(config{lanHost: "192.168.178.20"}, st, "10.0.0.5:8080")
+	if info.LAN != "192.168.178.20:7777" {
+		t.Errorf("lan %q", info.LAN)
+	}
+}

@@ -47,6 +47,11 @@ type config struct {
 	// look it up: it is deliberately bound to the local network, and a service in that position must
 	// not go and ask an outside party for its own address.
 	publicHost string
+	// lanHost is the host's address inside the local network. Normally taken from the address the
+	// browser used, but that fails in the common case: the panel is published on the loopback only,
+	// so it is usually opened as localhost, and localhost says nothing about the network. Then this
+	// is the only way the page can name it.
+	lanHost string
 	// envWrite is the .env mounted a second time, as a single file and writable. Empty means the
 	// deployment did not wire that up and the file stays read-only. The directory above stays
 	// read-only either way, because writable it would include the compose file.
@@ -65,6 +70,7 @@ func loadConfig() config {
 		dataDir:    envOr("ARK_DATA_DIR", "/data"),
 		envDir:     envOr("ARK_ENV_DIR", "/deploy"),
 		publicHost: os.Getenv("ARK_PUBLIC_HOST"),
+		lanHost:    os.Getenv("ARK_LAN_HOST"),
 		envWrite:   os.Getenv("ARK_ENV_WRITE"),
 		pending:    &restartFlag{},
 		rcon: rconConfig{

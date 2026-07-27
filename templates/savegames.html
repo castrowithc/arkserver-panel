@@ -144,10 +144,13 @@
             Neues Save-Verzeichnis
             <span class="key">zweiter Spielstand auf derselben Karte</span>
           </label>
-          <input id="newdir" type="text" name="newdir" maxlength="32" placeholder="z. B. zweite-runde">
+          <input id="newdir" type="text" name="newdir" maxlength="32" placeholder="z. B. zweite-runde"
+                 pattern="[A-Za-z0-9][A-Za-z0-9._\-]*"
+                 title="Buchstaben, Zahlen, Punkt, Bindestrich und Unterstrich; das erste Zeichen ein Buchstabe oder eine Zahl">
           <p class="why">
             Ausgefüllt gewinnt dieses Feld über die Auswahl darüber. Erlaubt sind Buchstaben, Zahlen,
-            Punkt, Bindestrich und Unterstrich.
+            Punkt, Bindestrich und Unterstrich. Der Browser prüft das schon beim Absenden, der Server
+            prüft es noch einmal.
           </p>
         </div>
         <p class="hint">

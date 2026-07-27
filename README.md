@@ -13,8 +13,11 @@ Seite in der Navigation als eigene gekennzeichnet.
 
 - **Status:** Zustand, Healthcheck, CPU, RAM gegen das Limit, Spielerliste, installierter
   Steam-Build. Aktualisiert sich selbst. Dazu die Verbindungszeile je Lage: auf demselben Rechner,
-  im eigenen Netz (die Adresse, über die das Panel gerade erreicht wurde) und von außen, letztere
-  aus `ARK_PUBLIC_HOST`, weil sie sonst nicht bekannt ist.
+  im eigenen Netz und von außen. Der Port ist in allen dreien derselbe, nur die Adresse davor
+  wechselt. Die Ports stammen aus dem, was der Host wirklich veröffentlicht hat, nicht aus den
+  Standardwerten des Images. Die Adresse im eigenen Netz kommt aus `ARK_LAN_HOST` oder, wenn das
+  Panel von einem anderen Gerät aus geöffnet wurde, aus dieser Adresse; die von außen aus
+  `ARK_PUBLIC_HOST`. Beide schlägt das Panel nicht selbst nach.
 - **Lifecycle:** Neu starten (RCON, mit Speichern), Stoppen und Starten.
 - **Basiseinstellungen und Engine Einstellungen:** erzeugtes Formular über 246 Felder der beiden
   INIs, aufgeteilt wie in der Referenz (210 und 36), je Seite gruppiert und filterbar; ein Speichern
@@ -93,6 +96,7 @@ Alles über Umgebungsvariablen (`.env.example`):
 | `ARK_DOCKER_HOST` / `ARK_CONTAINER` | Socket-Proxy und Containername für CPU, RAM, Start und Stopp. |
 | `ARK_DATA_DIR` / `ARK_ENV_DIR` | Server-Volume und das Verzeichnis mit der `.env`. |
 | `ARK_ENV_WRITE` | Pfad der zweiten, schreibbaren Einbindung der `.env` (Einzeldatei). Gesetzt wird das Formular auf der Deployment-Seite bearbeitbar, leer bleibt die Seite eine Auflistung. Nie auf das Verzeichnis zeigen lassen: dort liegt die Compose-Datei, und wer die schreibt, bestimmt beim nächsten `up -d` alles. |
+| `ARK_LAN_HOST` | Adresse dieses Rechners im lokalen Netz, für dieselbe Verbindungszeile. Nötig, weil das Panel auf dem Loopback veröffentlicht ist und deshalb als `localhost` geöffnet wird, woraus sich die Netzadresse nicht ableiten lässt. |
 | `ARK_PUBLIC_HOST` | Adresse oder Name, unter dem der Server von außen erreichbar ist. Nur für die Verbindungszeile im Status. Das Panel schlägt das nicht selbst nach: es ist bewusst ans lokale Netz gebunden, und ein Dienst in dieser Lage fragt nicht bei Dritten nach seiner eigenen Adresse. |
 
 Fehlt eine der optionalen Quellen, blendet das Panel aus, was sie braucht, und schreibt den Grund auf
