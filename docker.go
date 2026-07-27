@@ -39,6 +39,12 @@ type containerState struct {
 		} `json:"Health"`
 	} `json:"State"`
 	RestartCount int `json:"RestartCount"`
+	// Config.Env is the environment the container was made with. It is the exact answer to what the
+	// server runs with wherever a configuration file still refers to a variable instead of a value,
+	// because the file on the host can have been edited since.
+	Config struct {
+		Env []string `json:"Env"`
+	} `json:"Config"`
 }
 
 // dockerStats is Docker's stats document, again reduced to the fields the meters need.

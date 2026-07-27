@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -59,6 +60,7 @@ var navigation = []navSection{
 		{Key: "engine", Path: "/engine", Title: "Engine Einstellungen"},
 	}},
 	{Name: "Administration", Entries: []navEntry{
+		{Key: "spielstand", Path: "/savegames", Title: "Spielstände", Own: true},
 		{Key: "backup", Path: "/backups", Title: "Backup"},
 		{Key: "deployment", Path: "/env", Title: "Deployment", Own: true},
 	}},
@@ -374,6 +376,30 @@ func restoreBackupHandler(cfg config) http.HandlerFunc {
 			return
 		}
 
+		// Which save game is in force decides where the world goes back. With an alternate save
+		// directory configured, the default one is not what the server reads.
+		file, err := readInstanceFile(cfg)
+		if err != nil {
+			http.Error(w, "Instanzdatei nicht lesbar: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		saveDir, active := file.saveDirOrDefault(), resolveMap(cfg, file)
+
+		// Refuse an archive from another map before taking the server down. The map is all an archive
+		// reveals about where it came from, so this catches the clear case and not every case: two
+		// save games of the same map cannot be told apart by their archives.
+		world, err := archiveWorld(entry, entry.path(cfg))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if world != "" && active.Value != "" && !strings.EqualFold(world, active.Value+".ark") {
+			http.Error(w, fmt.Sprintf(
+				"Diese Sicherung enthält %s, geladen ist aber %s. Zurückspielen würde eine fremde Welt in den laufenden Spielstand schreiben.",
+				world, active.Value), http.StatusConflict)
+			return
+		}
+
 		// Stopping first is what makes the restore stick, and it has a second effect worth having:
 		// with BACKUP_ON_STOP the shutdown writes one more backup of the current world, so the state
 		// about to be overwritten is itself saved before it goes.
@@ -381,7 +407,7 @@ func restoreBackupHandler(cfg config) http.HandlerFunc {
 			http.Error(w, "Server stoppen: "+err.Error(), http.StatusBadGateway)
 			return
 		}
-		restored, restoreErr := restoreBackup(cfg, entry)
+		restored, restoreErr := restoreBackup(cfg, entry, saveDir)
 		// Start again in either case: leaving the deployment down after a failed restore would turn
 		// one problem into two.
 		if err := cfg.docker.start(); err != nil {
@@ -396,6 +422,104 @@ func restoreBackupHandler(cfg config) http.HandlerFunc {
 		// before is meaningless.
 		cfg.pending.clear()
 		http.Redirect(w, r, "/backups?restored="+strconv.Itoa(restored), http.StatusSeeOther)
+	}
+}
+
+type savegamePage struct {
+	Chrome pageChrome
+	Saves  []saveGame
+	Maps   []mapChoice
+	// Dirs are the save directories that already exist, so switching back to one is a pick rather
+	// than a retyped name.
+	Dirs []string
+	// Origin is the map in force and where that answer comes from, which is the honest way to show a
+	// value that may no longer agree with the .env.
+	Origin  mapOrigin
+	SaveDir string
+	// CanSwitch is false without Docker access: the switch is a stop and a start, and nothing else
+	// applies the change.
+	CanSwitch bool
+	Flash     string
+	Failed    bool
+}
+
+func newSavegamePage(cfg config) savegamePage {
+	page := savegamePage{
+		Chrome:    newChrome(cfg, "spielstand"),
+		Maps:      mapChoices(cfg),
+		CanSwitch: cfg.docker.configured(),
+	}
+	file, err := readInstanceFile(cfg)
+	if err != nil {
+		page.Flash, page.Failed = "Instanzdatei nicht lesbar: "+err.Error(), true
+		return page
+	}
+	page.SaveDir = file.saveDirOrDefault()
+	page.Origin = resolveMap(cfg, file)
+
+	saves, err := listSaveGames(cfg, page.SaveDir, page.Origin.Value)
+	if err != nil {
+		page.Flash, page.Failed = "Spielstände nicht lesbar: "+err.Error(), true
+		return page
+	}
+	page.Saves = saves
+
+	seen := map[string]bool{savedArksDir: true}
+	page.Dirs = []string{savedArksDir}
+	for _, s := range saves {
+		if !seen[s.Dir] {
+			seen[s.Dir] = true
+			page.Dirs = append(page.Dirs, s.Dir)
+		}
+	}
+	return page
+}
+
+func savegamesHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		page := newSavegamePage(cfg)
+		if r.URL.Query().Get("switched") == "1" {
+			page.Flash = "Umgeschaltet. Der Server lädt die Welt, das dauert einige Minuten; bis dahin ist er nicht erreichbar."
+		}
+		render(w, "savegames.html", page)
+	}
+}
+
+// switchSavegameHandler applies one save game. The work is in applySaveGame; what happens here is
+// only the reading of the form, because a wrong value must be refused before the server goes down.
+func switchSavegameHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if !sameOrigin(r) {
+			http.Error(w, "cross-site request rejected", http.StatusForbidden)
+			return
+		}
+		if !cfg.docker.configured() {
+			http.Error(w, "ohne Docker-Zugriff kann das Panel den Server nicht stoppen und starten", http.StatusForbidden)
+			return
+		}
+
+		saveDir := r.FormValue("dir")
+		// A new directory is typed rather than picked, and it wins over the picker so the form does
+		// not silently ignore what was typed.
+		if name := strings.TrimSpace(r.FormValue("newdir")); name != "" {
+			saveDir = name
+		}
+		if saveDir == "" {
+			saveDir = savedArksDir
+		}
+
+		if err := applySaveGame(cfg, r.FormValue("map"), saveDir); err != nil {
+			http.Error(w, err.Error(), http.StatusBadGateway)
+			return
+		}
+		// The server has restarted, so a "saved but not yet in effect" marker from before is spent.
+		cfg.pending.clear()
+		http.Redirect(w, r, "/savegames?switched=1", http.StatusSeeOther)
 	}
 }
 

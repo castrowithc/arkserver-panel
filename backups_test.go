@@ -110,7 +110,7 @@ func TestRestoreTargetDirRoutesByName(t *testing.T) {
 		"GameUserSettings.ini":         filepath.Join(saved, "Config", "LinuxServer"),
 	}
 	for name, want := range cases {
-		if got := restoreTargetDir(cfg, name); got != want {
+		if got := restoreTargetDir(cfg, savedArksDir, name); got != want {
 			t.Errorf("%s -> %s, want %s", name, got, want)
 		}
 	}
@@ -150,7 +150,7 @@ func TestRestoreBackupPutsEveryFileWhereTheServerReadsIt(t *testing.T) {
 		t.Fatalf("listing: %v, %d entries", err, len(entries))
 	}
 
-	restored, err := restoreBackup(cfg, entries[0])
+	restored, err := restoreBackup(cfg, entries[0], savedArksDir)
 	if err != nil {
 		t.Fatalf("restore: %v", err)
 	}
@@ -195,7 +195,7 @@ func TestRestoreBackupKeepsMembersInsideTheTargetDirectory(t *testing.T) {
 	if err != nil || len(entries) != 1 {
 		t.Fatalf("listing: %v, %d entries", err, len(entries))
 	}
-	if _, err := restoreBackup(cfg, entries[0]); err != nil {
+	if _, err := restoreBackup(cfg, entries[0], savedArksDir); err != nil {
 		t.Fatalf("restore: %v", err)
 	}
 
@@ -228,7 +228,7 @@ func TestRestoreBackupWritesTightPermissions(t *testing.T) {
 	if err != nil || len(entries) != 1 {
 		t.Fatalf("listing: %v, %d entries", err, len(entries))
 	}
-	if _, err := restoreBackup(cfg, entries[0]); err != nil {
+	if _, err := restoreBackup(cfg, entries[0], savedArksDir); err != nil {
 		t.Fatalf("restore: %v", err)
 	}
 
@@ -238,5 +238,63 @@ func TestRestoreBackupWritesTightPermissions(t *testing.T) {
 	}
 	if perm := info.Mode().Perm(); perm != 0o600 {
 		t.Errorf("mode is %o, want 600", perm)
+	}
+}
+
+func TestRestoreTargetDirFollowsTheSaveDirectoryInForce(t *testing.T) {
+	cfg := config{dataDir: "/data"}
+	saved := filepath.Join("/data", "server", "ShooterGame", "Saved")
+	// With an alternate save directory configured, the default one is not what the server reads.
+	// Restoring a world there would look like it worked and change nothing about the save game being
+	// played.
+	if got, want := restoreTargetDir(cfg, "zweite", "TheIsland.ark"), filepath.Join(saved, "zweite"); got != want {
+		t.Errorf("world -> %s, want %s", got, want)
+	}
+	// The INIs are the server's own and stay where they are, whatever save game is loaded.
+	if got, want := restoreTargetDir(cfg, "zweite", "Game.ini"), filepath.Join(saved, "Config", "LinuxServer"); got != want {
+		t.Errorf("ini -> %s, want %s", got, want)
+	}
+}
+
+func TestArchiveWorldNamesTheMapAnArchiveBelongsTo(t *testing.T) {
+	cfg := config{dataDir: t.TempDir()}
+	archive := filepath.Join(backupDir(cfg), "2026-07-26", "main.tar")
+	writeArchive(t, archive, map[string]string{
+		"stamp/76500000000000000.arkprofile": "profile",
+		"stamp/TheCenter.ark":                "world",
+		"stamp/Game.ini":                     "ini",
+	})
+	entries, err := listBackups(cfg)
+	if err != nil || len(entries) != 1 {
+		t.Fatalf("listing: %v, %d entries", err, len(entries))
+	}
+	world, err := archiveWorld(entries[0], entries[0].path(cfg))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if world != "TheCenter.ark" {
+		t.Errorf("world %q", world)
+	}
+}
+
+func TestArchiveWorldIsEmptyWhenTheArchiveCarriesNoWorld(t *testing.T) {
+	// arkmanager writes exactly this when its configuration names a map whose world does not exist:
+	// profile and INIs are archived, the world is missing, and the backup still reports success.
+	cfg := config{dataDir: t.TempDir()}
+	archive := filepath.Join(backupDir(cfg), "2026-07-26", "main.tar")
+	writeArchive(t, archive, map[string]string{
+		"stamp/76500000000000000.arkprofile": "profile",
+		"stamp/Game.ini":                     "ini",
+	})
+	entries, err := listBackups(cfg)
+	if err != nil || len(entries) != 1 {
+		t.Fatalf("listing: %v, %d entries", err, len(entries))
+	}
+	world, err := archiveWorld(entries[0], entries[0].path(cfg))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if world != "" {
+		t.Errorf("world %q, want none", world)
 	}
 }

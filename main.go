@@ -185,6 +185,8 @@ func newRouter(cfg config) http.Handler {
 	app.HandleFunc("/files/save", saveFileHandler(cfg))
 	app.HandleFunc("/logs", logsHandler(cfg))
 	app.HandleFunc("/env", envHandler(cfg))
+	app.HandleFunc("/savegames", savegamesHandler(cfg))
+	app.HandleFunc("/savegames/switch", switchSavegameHandler(cfg))
 	app.HandleFunc("/backups", backupsHandler(cfg))
 	app.HandleFunc("/backups/download", downloadBackupHandler(cfg))
 	app.HandleFunc("/backups/restore", restoreBackupHandler(cfg))

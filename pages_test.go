@@ -166,3 +166,57 @@ func TestUnknownIDFallsBack(t *testing.T) {
 		t.Error("want the first file rendered as a fallback")
 	}
 }
+
+func TestSavegamesPageNamesWhatIsLoadedAndWhereItComesFrom(t *testing.T) {
+	cfg := filesFixture(t)
+	// The instance file as the image ships it: the map still a reference to the environment, so the
+	// page has to resolve it and say that the answer came from the host file.
+	instances := filepath.Dir(instanceCfgPath(cfg))
+	if err := os.MkdirAll(instances, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(instanceCfgPath(cfg), []byte(instanceSample), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cfg.envDir, ".env"), []byte("SERVER_MAP=TheIsland\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	arks := filepath.Join(savedRoot(cfg), savedArksDir)
+	if err := os.MkdirAll(arks, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(arks, "TheIsland.ark"), []byte("world"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	rec := get(t, newRouter(cfg), "/savegames")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("want 200, got %d", rec.Code)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "TheIsland") {
+		t.Error("the loaded map should be named")
+	}
+	if !strings.Contains(body, ".env") {
+		t.Error("the page should say where the value came from")
+	}
+	// Without Docker access the switch cannot be performed, so it must not be offered.
+	if strings.Contains(body, "/savegames/switch") {
+		t.Error("the switch was offered without Docker access")
+	}
+}
+
+func TestSwitchSavegameRefusesWithoutDockerAccess(t *testing.T) {
+	cfg := filesFixture(t)
+	req := httptest.NewRequest(http.MethodPost, "/savegames/switch",
+		strings.NewReader(url.Values{"map": {"TheCenter"}}.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	req.SetBasicAuth("admin", "secret")
+	rec := httptest.NewRecorder()
+	newRouter(cfg).ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("want 403 without Docker access, got %d", rec.Code)
+	}
+}

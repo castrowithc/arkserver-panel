@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de">
+<head>{{template "head" .Chrome}}</head>
+<body>
+  {{template "topbar" .Chrome}}
+  <aside class="sidebar">{{template "navlinks" .Chrome.Active}}</aside>
+
+  <main>
+    {{if .Flash}}<div class="flash {{if .Failed}}bad{{end}}">{{.Flash}}</div>{{end}}
+    {{template "pending" .}}
+
+    <p class="hint">
+      Ein Spielstand ist eine Karte in einem Save-Verzeichnis. Umschalten lässt die anderen Stände
+      unangetastet liegen: sie sind beim Zurückschalten wieder da, mit dem Stand, den sie beim
+      Verlassen hatten.
+    </p>
+    <p class="hint">
+      Charaktere und Stämme gehören zur Welt und wandern nicht mit. Auf einem anderen Spielstand
+      beginnt jeder Spieler neu; wer einen Charakter mitnehmen will, braucht den Transfer am Obelisken
+      und einen Cluster. Die Einstellungen dagegen gelten für den ganzen Server und nicht je
+      Spielstand: wer je Welt andere Raten will, muss sie beim Umschalten mitwechseln.
+    </p>
+
+    {{if not .CanSwitch}}
+      <p class="hint">
+        Umschalten ist nicht verfügbar: dafür muss das Panel den Server stoppen und starten können, und
+        dazu fehlt der Docker-Zugriff.
+      </p>
+    {{end}}
+
+    <h2>Geladen</h2>
+    <table class="list">
+      <tbody>
+        <tr>
+          <td>Karte</td>
+          <td>
+            <strong>{{if .Origin.Value}}{{.Origin.Value}}{{else}}unbekannt{{end}}</strong>
+            <span class="file">{{.Origin.Source}}</span>
+            {{if not .Origin.Exact}}
+              <span class="muted">nicht aus dem laufenden Container gelesen, kann abweichen</span>
+            {{end}}
+          </td>
+        </tr>
+        <tr>
+          <td>Save-Verzeichnis</td>
+          <td><strong>{{.SaveDir}}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Vorhandene Spielstände</h2>
+    {{if not .Saves}}
+      <p class="muted">Noch kein Spielstand auf der Platte.</p>
+    {{else}}
+      <table class="list">
+        <thead>
+          <tr>
+            <th>Karte</th>
+            <th>Save-Verzeichnis</th>
+            <th>Zuletzt gespeichert</th>
+            <th class="right">Größe</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Saves}}
+            <tr>
+              <td>
+                {{.MapLabel}}
+                <span class="file">{{.Map}}</span>
+              </td>
+              <td>{{.DirLabel}}</td>
+              <td>
+                {{if .Fresh}}
+                  <span class="muted">noch nicht gespeichert</span>
+                {{else}}
+                  {{.Time}}
+                {{end}}
+              </td>
+              <td class="right">
+                {{.Size}}
+                {{if .Active}}<span class="file">geladen</span>{{end}}
+              </td>
+            </tr>
+          {{end}}
+        </tbody>
+      </table>
+      <p class="hint">
+        Die Welt-Datei einer Karte entsteht erst beim ersten Speichern, nicht beim Laden. Ein frisch
+        angelegter Spielstand steht deshalb kurz ohne Größe in der Liste.
+      </p>
+    {{end}}
+
+    {{if .CanSwitch}}
+      <h2>Umschalten</h2>
+      <form method="post" action="/savegames/switch"
+            onsubmit="return confirm('Spielstand wechseln?\n\nDer Server wird gestoppt und wieder gestartet und ist dabei rund vier Minuten nicht erreichbar. Der bisherige Stand bleibt vollständig liegen.')">
+        <div class="row">
+          <label for="map">
+            Karte
+            <span class="key">serverMap</span>
+          </label>
+          <select id="map" name="map">
+            {{range .Maps}}
+              <option value="{{.Code}}" {{if eq .Code $.Origin.Value}}selected{{end}}>{{.Label}}{{if not .Installed}} (nicht installiert){{end}}</option>
+            {{end}}
+          </select>
+        </div>
+        <div class="row">
+          <label for="dir">
+            Save-Verzeichnis
+            <span class="key">vorhandenes wählen</span>
+          </label>
+          <select id="dir" name="dir">
+            {{range .Dirs}}
+              <option value="{{.}}" {{if eq . $.SaveDir}}selected{{end}}>{{.}}</option>
+            {{end}}
+          </select>
+        </div>
+        <div class="row">
+          <label for="newdir">
+            Neues Save-Verzeichnis
+            <span class="key">zweiter Spielstand auf derselben Karte</span>
+          </label>
+          <input id="newdir" type="text" name="newdir" maxlength="32" placeholder="z. B. zweite-runde">
+          <p class="why">
+            Ausgefüllt gewinnt dieses Feld über die Auswahl darüber. Erlaubt sind Buchstaben, Zahlen,
+            Punkt, Bindestrich und Unterstrich.
+          </p>
+        </div>
+        <p class="hint">
+          Eine Karte, die nicht installiert ist, lädt der Server beim Start nach. Das sind je Karte
+          mehrere Gigabyte und dauert entsprechend lange.
+        </p>
+        <div class="actions">
+          <button type="submit">Umschalten</button>
+          <span class="muted">rund vier Minuten nicht erreichbar</span>
+        </div>
+      </form>
+    {{end}}
+  </main>
+</body>
+</html>

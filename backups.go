@@ -104,21 +104,57 @@ func (e backupEntry) path(cfg config) string {
 // restoreTargetDir routes one archive member to where the server reads it. An archive holds the
 // world save, the player profiles and both INIs, flat inside a single time-stamped directory, so
 // the destination follows from the file name and from nothing else.
-func restoreTargetDir(cfg config, name string) string {
-	saved := filepath.Join(cfg.dataDir, "server", "ShooterGame", "Saved")
+//
+// saveDir is the save directory in force, not a constant: with an alternate one configured, the
+// default directory is not what the server reads, and writing a world there would restore into a
+// save game nobody is playing while looking like it worked.
+func restoreTargetDir(cfg config, saveDir, name string) string {
+	saved := savedRoot(cfg)
 	if strings.EqualFold(filepath.Ext(name), ".ini") {
 		return filepath.Join(saved, "Config", "LinuxServer")
 	}
-	return filepath.Join(saved, "SavedArks")
+	return filepath.Join(saved, saveDir)
+}
+
+// archiveWorld is the name of the world file an archive carries, which says which map it belongs to.
+// Read before anything is restored, so a mismatch is refused while the server is still up rather
+// than discovered afterwards. An archive without a world (arkmanager writes one when its
+// configuration names a map whose world does not exist) comes back empty.
+func archiveWorld(entry backupEntry, path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	var src io.Reader = f
+	if strings.HasSuffix(entry.Name, ".bz2") {
+		src = bzip2.NewReader(f)
+	}
+	tr := tar.NewReader(src)
+	for {
+		h, err := tr.Next()
+		if err == io.EOF {
+			return "", nil
+		}
+		if err != nil {
+			return "", fmt.Errorf("archiv %s lesen: %w", entry.Name, err)
+		}
+		name := filepath.Base(filepath.ToSlash(h.Name))
+		if h.Typeflag == tar.TypeReg && strings.HasSuffix(name, ".ark") {
+			return name, nil
+		}
+	}
 }
 
 // restoreBackup unpacks one archive over the live files. It replaces only what the archive carries
 // and leaves everything else in place, because the same directory also holds arkmanager's dated
 // rotation copies, which no backup contains.
 //
-// The caller stops the server first. Unpacking underneath a running server would achieve nothing:
-// it holds the world in memory and writes it out again when it shuts down.
-func restoreBackup(cfg config, entry backupEntry) (int, error) {
+// The caller stops the server first, and hands in the save directory in force so the world lands in
+// the save game that is actually being played. Unpacking underneath a running server would achieve
+// nothing: it holds the world in memory and writes it out again when it shuts down.
+func restoreBackup(cfg config, entry backupEntry, saveDir string) (int, error) {
 	f, err := os.Open(entry.path(cfg))
 	if err != nil {
 		return 0, err
@@ -149,7 +185,7 @@ func restoreBackup(cfg config, entry backupEntry) (int, error) {
 		if name == "." || name == ".." || name == string(filepath.Separator) {
 			continue
 		}
-		target := filepath.Join(restoreTargetDir(cfg, name), name)
+		target := filepath.Join(restoreTargetDir(cfg, saveDir, name), name)
 		if err := writeFileAtomic(target, tr); err != nil {
 			return restored, fmt.Errorf("%s zurückspielen: %w", name, err)
 		}

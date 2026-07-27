@@ -33,10 +33,19 @@ Seite in der Navigation als eigene gekennzeichnet.
   der nächste Start verwirft.
 - **Backup:** die vorhandenen Archive auflisten, herunterladen und eines zurückspielen. Das
   Zurückspielen stoppt den Server, ersetzt genau die Dateien aus dem Archiv (Welt-Stand,
-  Spielerprofile und beide INIs) und startet ihn wieder.
+  Spielerprofile und beide INIs) und startet ihn wieder. Es landet im geladenen Spielstand, und ein
+  Archiv einer anderen Karte wird abgelehnt, bevor der Server dafür heruntergefahren wird.
+- **Spielstände:** ein Spielstand ist eine Karte in einem Save-Verzeichnis. Die Seite listet, was auf
+  der Platte liegt, nennt den geladenen samt der Quelle des Werts, und schaltet um: stoppen, Karte und
+  Verzeichnis in die arkmanager-Instanzdatei schreiben, starten. Ein neues Save-Verzeichnis gibt
+  derselben Karte einen zweiten, unabhängigen Spielstand mit eigenen Charakteren und Stämmen. Die
+  Reihenfolge ist keine Vorliebe: arkmanager liest die Datei bei jedem Aufruf, und eine Karte, die
+  während des Betriebs geschrieben wird, lässt die Abschluss-Sicherung die falsche Welt archivieren
+  oder keine, in beiden Fällen ohne Fehler. Ein Neustart über RCON greift hier nicht, weil der
+  Supervisor seine Konfiguration behält.
 
-Bewusst nicht drin: die Parameter prozeduraler Karten, schreibende `.env`, Mods-Browser, geplante
-Neustarts. Sicherungen legt das Panel nicht selbst an: das erledigt der Server per Cron, vor jedem
+Bewusst nicht drin: Charaktere und Stämme, die es nur im Spiel gibt, die Parameter prozeduraler
+Karten, schreibende `.env`, Mods-Browser, geplante Neustarts. Sicherungen legt das Panel nicht selbst an: das erledigt der Server per Cron, vor jedem
 Update und bei jedem Stop.
 
 ## Betrieb
