@@ -16,6 +16,14 @@
       Sicherung das Schicksal der Welt, die sie sichern soll.
     </p>
 
+    {{if .SaveGame}}
+      <p class="hint">
+        Zurückgespielt wird immer in den Spielstand, der gerade geladen ist, derzeit
+        <code>{{.SaveGame}}</code>. Eine Sicherung aus einem anderen Spielstand wird abgelehnt,
+        sofern sie sagen kann, woher sie kommt.
+      </p>
+    {{end}}
+
     <details class="hint">
       <summary>Wo diese Dateien liegen</summary>
       <p>
@@ -25,9 +33,11 @@
         die Verzeichnisstruktur des Servers und ohne die Umlaufkopien.
       </p>
       <p>
-        Zurückgespielt wird in den Spielstand, der gerade geladen ist. Ein Archiv einer anderen Karte
-        wird abgelehnt. Zwei Spielstände derselben Karte sind an ihren Archiven allerdings nicht zu
-        unterscheiden, dort entscheidet der Zeitpunkt.
+        Der Name eines Archivs sagt nichts über seinen Spielstand: er trägt den Namen der
+        arkmanager-Instanz, und die ist für jeden Spielstand dieselbe. Die Karte steht im Archiv,
+        weil die Welt-Datei sie im Namen führt. Der Spielstand steht daneben, in einer Datei
+        <code>&lt;Archiv&gt;.savegame</code>, die der Server beim Sichern schreibt. Ältere Archive
+        haben sie nicht und gelten deshalb als unbekannter Herkunft.
       </p>
     </details>
 
@@ -38,39 +48,58 @@
       </p>
     {{end}}
 
-    {{if not .Backups}}
+    {{if not .Any}}
       <p class="muted">Noch keine Sicherungen vorhanden.</p>
     {{else}}
-      <table class="list">
-        <thead>
-          <tr>
-            <th>Zeitpunkt</th>
-            <th>Größe</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {{range .Backups}}
+      {{range .Groups}}
+        {{if .Map}}
+          <h2>{{.Map}}</h2>
+        {{else}}
+          <h2>Ohne Welt-Stand</h2>
+          <p class="hint">
+            Diese Archive enthalten keine Welt, sondern nur Spielerprofile und die beiden
+            INI-Dateien. So etwas entsteht im Zeitfenster zwischen einem Kartenwechsel und dem ersten
+            Speichern: die Welt-Datei der neuen Karte gibt es dann noch nicht. Zurückspielen setzt
+            damit die Einstellungen zurück und lässt die laufende Welt unberührt.
+          </p>
+        {{end}}
+        <table class="list">
+          <thead>
             <tr>
-              <td>
-                {{.Time}}
-                <span class="file">{{.Name}}</span>
-              </td>
-              <td class="right">{{.Size}}</td>
-              <td class="right">
-                <a class="dl" href="/backups/download?b={{.ID}}">Herunterladen</a>
-                {{if $.CanRestore}}
-                  <form method="post" action="/backups/restore" class="inline"
-                        onsubmit="return confirm('Sicherung vom {{.Time}} zurückspielen?\n\nDer Server wird gestoppt. Welt-Stand, Spielerprofile und beide INI-Dateien werden durch den Stand dieser Sicherung ersetzt: die Einstellungen gehen also ebenfalls auf diesen Stand zurück.\n\nDas dauert einige Minuten.')">
-                    <input type="hidden" name="b" value="{{.ID}}">
-                    <button type="submit">Zurückspielen</button>
-                  </form>
-                {{end}}
-              </td>
+              <th>Zeitpunkt</th>
+              <th>Spielstand</th>
+              <th>Welt</th>
+              <th>Archiv</th>
+              <th></th>
             </tr>
-          {{end}}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {{range .Entries}}
+              <tr>
+                <td>
+                  {{.Time}}
+                  <span class="file">{{.Name}}</span>
+                </td>
+                <td>
+                  {{if .Stamped}}<code>{{.SaveGame}}</code>{{else}}<span class="muted">unbekannt</span>{{end}}
+                </td>
+                <td class="right">{{if .HasWorld}}{{.WorldSizeText}}{{else}}<span class="muted">keine</span>{{end}}</td>
+                <td class="right">{{.Size}}</td>
+                <td class="right">
+                  <a class="dl" href="/backups/download?b={{.ID}}">Herunterladen</a>
+                  {{if $.CanRestore}}
+                    <form method="post" action="/backups/restore" class="inline"
+                          onsubmit="return confirm('Sicherung vom {{.Time}} zurückspielen?\n\nZiel ist der geladene Spielstand {{$.SaveGame}}.\nHerkunft dieser Sicherung: {{if .Stamped}}{{.SaveGame}}.{{else}}unbekannt, das Archiv ist älter als die Kennzeichnung. Ob es aus diesem Spielstand stammt, sagt nur der Zeitpunkt.{{end}}\n{{if .HasWorld}}Enthaltene Welt: {{.World}} ({{.WorldSizeText}}).{{else}}Dieses Archiv enthält KEINE Welt. Zurückgespielt werden nur Profile und Einstellungen; die laufende Welt bleibt, wie sie ist.{{end}}\n\nDer Server wird gestoppt. Die enthaltenen Dateien ersetzen den aktuellen Stand, die Einstellungen gehen also ebenfalls auf diesen Stand zurück.\n\nDas dauert einige Minuten.')">
+                      <input type="hidden" name="b" value="{{.ID}}">
+                      <button type="submit">Zurückspielen</button>
+                    </form>
+                  {{end}}
+                </td>
+              </tr>
+            {{end}}
+          </tbody>
+        </table>
+      {{end}}
     {{end}}
   </main>
 </body>

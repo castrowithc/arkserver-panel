@@ -268,12 +268,16 @@ func TestArchiveWorldNamesTheMapAnArchiveBelongsTo(t *testing.T) {
 	if err != nil || len(entries) != 1 {
 		t.Fatalf("listing: %v, %d entries", err, len(entries))
 	}
-	world, err := archiveWorld(entries[0], entries[0].path(cfg))
-	if err != nil {
-		t.Fatal(err)
+	if got := entries[0].World; got != "TheCenter.ark" {
+		t.Errorf("world %q", got)
 	}
-	if world != "TheCenter.ark" {
-		t.Errorf("world %q", world)
+	// The map is what the listing groups on, so it has to come out of the file name rather than
+	// being carried around as the whole file name.
+	if got := entries[0].Map; got != "TheCenter" {
+		t.Errorf("map %q", got)
+	}
+	if !entries[0].HasWorld() {
+		t.Error("archive with a world reports none")
 	}
 }
 
@@ -290,11 +294,144 @@ func TestArchiveWorldIsEmptyWhenTheArchiveCarriesNoWorld(t *testing.T) {
 	if err != nil || len(entries) != 1 {
 		t.Fatalf("listing: %v, %d entries", err, len(entries))
 	}
-	world, err := archiveWorld(entries[0], entries[0].path(cfg))
+	if entries[0].HasWorld() {
+		t.Errorf("world %q, want none", entries[0].World)
+	}
+}
+
+func TestSaveGameComesFromTheSidecarAndIsUnknownWithoutIt(t *testing.T) {
+	cfg := config{dataDir: t.TempDir(), archives: &archiveCache{}}
+	plain := filepath.Join(backupDir(cfg), "2026-07-26", "main.2026-07-26_10.00.00.tar")
+	stamped := filepath.Join(backupDir(cfg), "2026-07-26", "main.2026-07-26_11.00.00.tar")
+	writeArchive(t, plain, map[string]string{"stamp/TheIsland.ark": "world"})
+	writeArchive(t, stamped, map[string]string{"stamp/TheIsland.ark": "world"})
+	// The server writes this next to the archive. Anything it does not recognise is ignored rather
+	// than treated as the value, and a trailing comment style is not invented here.
+	if err := os.WriteFile(stamped+savegameStampSuffix, []byte("map=TheIsland\nsavedir=zweite-runde\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	entries, err := listBackups(cfg)
+	if err != nil || len(entries) != 2 {
+		t.Fatalf("listing: %v, %d entries", err, len(entries))
+	}
+	byName := map[string]backupEntry{}
+	for _, e := range entries {
+		byName[e.Name] = e
+	}
+	if got := byName["main.2026-07-26_11.00.00.tar"]; got.SaveGame != "zweite-runde" || !got.Stamped() {
+		t.Errorf("stamped archive says %q, stamped=%v", got.SaveGame, got.Stamped())
+	}
+	// An archive from before the stamp existed must read as unknown. Defaulting it to SavedArks
+	// would be a guess, and the restore refuses on exactly this value.
+	if got := byName["main.2026-07-26_10.00.00.tar"]; got.SaveGame != "" || got.Stamped() {
+		t.Errorf("unstamped archive says %q, stamped=%v", got.SaveGame, got.Stamped())
+	}
+}
+
+func TestRestoreConflictRefusesAForeignMapAndAForeignSaveGame(t *testing.T) {
+	island := archiveInfo{World: "TheIsland.ark", Map: "TheIsland"}
+	cases := []struct {
+		name     string
+		entry    backupEntry
+		saveDir  string
+		active   string
+		conflict bool
+	}{
+		{"same map, same save game", backupEntry{archiveInfo: with(island, "SavedArks")}, "SavedArks", "TheIsland", false},
+		{"other map", backupEntry{archiveInfo: archiveInfo{World: "TheCenter.ark", Map: "TheCenter"}}, "SavedArks", "TheIsland", true},
+		// The case the stamp exists for: same map, different save game. Nothing inside the archive
+		// tells these apart, which is why this used to go through.
+		{"same map, other save game", backupEntry{archiveInfo: with(island, "zweite-runde")}, "SavedArks", "TheIsland", true},
+		// Unstamped archives predate the stamp and stay usable.
+		{"unstamped", backupEntry{archiveInfo: island}, "SavedArks", "TheIsland", false},
+		// An archive without a world carries no map to disagree with.
+		{"no world", backupEntry{archiveInfo: with(archiveInfo{}, "SavedArks")}, "SavedArks", "TheIsland", false},
+		// Without a resolvable map the map check is skipped rather than guessed.
+		{"unknown active map", backupEntry{archiveInfo: archiveInfo{World: "TheCenter.ark", Map: "TheCenter"}}, "SavedArks", "", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			err := restoreConflict(c.entry, c.saveDir, c.active)
+			if got := err != nil; got != c.conflict {
+				t.Errorf("conflict=%v, want %v (%v)", got, c.conflict, err)
+			}
+		})
+	}
+}
+
+func with(i archiveInfo, saveGame string) archiveInfo {
+	i.SaveGame = saveGame
+	return i
+}
+
+func TestStampIsPickedUpWhenItArrivesAfterTheArchive(t *testing.T) {
+	// The server writes the archive first and stamps it in the step right after. A listing that
+	// falls into that gap must not remember "unknown" for the rest of the panel's life, which is
+	// what caching the stamp alongside the archive would do.
+	cfg := config{dataDir: t.TempDir(), archives: &archiveCache{}}
+	archive := filepath.Join(backupDir(cfg), "2026-07-26", "main.tar")
+	writeArchive(t, archive, map[string]string{"stamp/TheIsland.ark": "world"})
+
+	if entries, err := listBackups(cfg); err != nil || entries[0].Stamped() {
+		t.Fatalf("first listing: %v, stamped=%v", err, entries[0].Stamped())
+	}
+	if err := os.WriteFile(archive+savegameStampSuffix, []byte("savedir=SavedArks\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := listBackups(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if world != "" {
-		t.Errorf("world %q, want none", world)
+	if entries[0].SaveGame != "SavedArks" {
+		t.Errorf("save game %q after the stamp arrived, want SavedArks", entries[0].SaveGame)
+	}
+}
+
+func TestGroupBackupsKeepsOrderAndPutsWorldlessArchivesLast(t *testing.T) {
+	entries := []backupEntry{
+		{Name: "a", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland"}},
+		{Name: "b"},
+		{Name: "c", archiveInfo: archiveInfo{World: "TheCenter.ark", Map: "TheCenter"}},
+		{Name: "d", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland"}},
+	}
+	groups := groupBackups(entries)
+	if len(groups) != 3 {
+		t.Fatalf("%d groups, want 3", len(groups))
+	}
+	// A group follows its newest entry, so the order of first appearance is the order of groups.
+	if groups[0].Map != "TheIsland" || groups[1].Map != "TheCenter" {
+		t.Errorf("groups %q, %q", groups[0].Map, groups[1].Map)
+	}
+	if len(groups[0].Entries) != 2 || groups[0].Entries[0].Name != "a" || groups[0].Entries[1].Name != "d" {
+		t.Errorf("island group %+v", groups[0].Entries)
+	}
+	if groups[2].Map != "" || len(groups[2].Entries) != 1 || groups[2].Entries[0].Name != "b" {
+		t.Errorf("worldless group %+v", groups[2])
+	}
+}
+
+func TestArchiveCacheRereadsWhenTheFileChanges(t *testing.T) {
+	cfg := config{dataDir: t.TempDir(), archives: &archiveCache{}}
+	archive := filepath.Join(backupDir(cfg), "2026-07-26", "main.tar")
+	writeArchive(t, archive, map[string]string{"stamp/TheIsland.ark": "world"})
+
+	if entries, err := listBackups(cfg); err != nil || entries[0].Map != "TheIsland" {
+		t.Fatalf("first listing: %v, %+v", err, entries)
+	}
+	// Rewriting the file under the same name has to invalidate the entry. Size and modification time
+	// are the key for exactly this case; remembering the old answer would show a world that is no
+	// longer in there. A second member makes the size differ for certain, so the test does not rest
+	// on timestamp resolution.
+	writeArchive(t, archive, map[string]string{
+		"stamp/TheCenter.ark": "a different world entirely",
+		"stamp/Game.ini":      "ini",
+	})
+	entries, err := listBackups(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if entries[0].Map != "TheCenter" {
+		t.Errorf("map %q after rewrite, want TheCenter", entries[0].Map)
 	}
 }

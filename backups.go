@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -30,7 +31,37 @@ type backupEntry struct {
 	Size string
 	// modTime is what the listing sorts on, kept apart from the rendered Time above.
 	modTime time.Time
+	// archiveInfo is what the archive itself says, read once per file and cached.
+	archiveInfo
+	// WorldSizeText is the world's own size, which is the number that matters: the archive size
+	// includes the profiles and both INIs, and an archive without a world is small rather than
+	// empty.
+	WorldSizeText string
 }
+
+// archiveInfo is what an archive says about itself. The world and its size are read out of the
+// archive; the save game cannot be, because every save game shares the instance name arkmanager
+// puts in the file name, so that one comes from the sidecar the server writes beside it.
+type archiveInfo struct {
+	// World is the file name of the world inside, empty when the archive carries none. That happens
+	// for real: a backup taken between a map switch and the first save of the new map has nothing
+	// to put in, because the world file appears at the first save and not at load.
+	World     string
+	WorldSize int64
+	// Map is the map code, taken from the world file name. Empty exactly when World is.
+	Map string
+	// SaveGame is the save directory the backup was taken from. Empty means unknown, which is the
+	// normal state of every archive written before the stamp existed. It never means "the default
+	// one": that is a different statement and would be a guess.
+	SaveGame string
+}
+
+func (i archiveInfo) HasWorld() bool { return i.World != "" }
+
+// Stamped says whether the archive knows where it came from. The page needs the distinction because
+// "unknown" and "the default save game" look the same otherwise, and only one of them is safe to
+// act on.
+func (i archiveInfo) Stamped() bool { return i.SaveGame != "" }
 
 func backupDir(cfg config) string { return filepath.Join(cfg.dataDir, "backup") }
 
@@ -65,14 +96,27 @@ func listBackups(cfg config) ([]backupEntry, error) {
 		if err != nil {
 			return err
 		}
-		out = append(out, backupEntry{
+		e := backupEntry{
 			ID:      filepath.ToSlash(rel),
 			Name:    d.Name(),
 			Day:     filepath.ToSlash(filepath.Dir(rel)),
 			Time:    info.ModTime().Format("2006-01-02 15:04"),
 			Size:    formatMB(info.Size()),
 			modTime: info.ModTime(),
-		})
+		}
+		// A failure here is not a failure of the listing. An archive that cannot be read still
+		// exists, is still worth showing, and is still worth downloading; it simply says nothing
+		// about itself, which is the same state as an old unstamped one.
+		e.archiveInfo, _ = cfg.archives.lookup(path, info)
+		// The stamp is read fresh every time, outside the cache. It is written by a separate step
+		// right after the archive, so an archive listed in the gap between the two would otherwise
+		// be remembered as unstamped for as long as the panel runs. It is also a two-line file, so
+		// there is nothing to save here anyway.
+		e.SaveGame = readSaveGameStamp(path)
+		if e.HasWorld() {
+			e.WorldSizeText = formatMB(e.WorldSize)
+		}
+		out = append(out, e)
 		return nil
 	})
 	if err != nil {
@@ -81,6 +125,100 @@ func listBackups(cfg config) ([]backupEntry, error) {
 	sort.Slice(out, func(i, j int) bool { return out[i].modTime.After(out[j].modTime) })
 	return out, nil
 }
+
+// archiveCache remembers what each archive said about itself. Reading means decompressing the head
+// of a bzip2 stream, which is cheap once and pure waste on every page load, and an archive never
+// changes after it is written. Size and modification time are part of the key anyway, so a file
+// replaced under the same name is read again rather than remembered wrongly.
+type archiveCache struct {
+	mu      sync.Mutex
+	entries map[string]cachedArchive
+}
+
+type cachedArchive struct {
+	size    int64
+	modTime time.Time
+	info    archiveInfo
+}
+
+// The methods tolerate a nil receiver, so a zero-value config behaves as an empty cache that reads
+// every time instead of panicking.
+func (c *archiveCache) lookup(path string, info fs.FileInfo) (archiveInfo, error) {
+	if c == nil {
+		return readArchiveInfo(path, info.Name())
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if hit, ok := c.entries[path]; ok && hit.size == info.Size() && hit.modTime.Equal(info.ModTime()) {
+		return hit.info, nil
+	}
+	read, err := readArchiveInfo(path, info.Name())
+	if err != nil {
+		return archiveInfo{}, err
+	}
+	if c.entries == nil {
+		c.entries = map[string]cachedArchive{}
+	}
+	c.entries[path] = cachedArchive{size: info.Size(), modTime: info.ModTime(), info: read}
+	return read, nil
+}
+
+// readArchiveInfo opens an archive far enough to answer for it, and no further. arkmanager writes
+// the world first, so the loop normally stops after one header and only the first block of the
+// stream is ever decompressed. Reading to the end happens only for an archive that carries no
+// world, and that one is a few kilobytes.
+//
+// The save game is deliberately not read here: it lives in a separate file with a life of its own,
+// and caching it against the archive's timestamp would freeze an answer that can still change.
+func readArchiveInfo(path, name string) (archiveInfo, error) {
+	var info archiveInfo
+
+	f, err := os.Open(path)
+	if err != nil {
+		return info, err
+	}
+	defer f.Close()
+
+	var src io.Reader = f
+	if strings.HasSuffix(name, ".bz2") {
+		src = bzip2.NewReader(f)
+	}
+	tr := tar.NewReader(src)
+	for {
+		h, err := tr.Next()
+		if err == io.EOF {
+			return info, nil
+		}
+		if err != nil {
+			return info, fmt.Errorf("archiv %s lesen: %w", name, err)
+		}
+		base := filepath.Base(filepath.ToSlash(h.Name))
+		if h.Typeflag == tar.TypeReg && strings.HasSuffix(base, ".ark") {
+			info.World, info.WorldSize = base, h.Size
+			info.Map = strings.TrimSuffix(base, ".ark")
+			return info, nil
+		}
+	}
+}
+
+// readSaveGameStamp reads the sidecar the server writes next to an archive, naming the save
+// directory the backup was taken from. Absent is the ordinary case for everything backed up before
+// the stamp existed and is reported as unknown, never as the default.
+func readSaveGameStamp(path string) string {
+	b, err := os.ReadFile(path + savegameStampSuffix)
+	if err != nil {
+		return ""
+	}
+	for _, line := range strings.Split(normalizeNewlines(string(b)), "\n") {
+		key, value, ok := strings.Cut(line, "=")
+		if ok && strings.TrimSpace(key) == "savedir" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
+}
+
+const savegameStampSuffix = ".savegame"
 
 func formatMB(b int64) string {
 	return fmt.Sprintf("%.1f MB", float64(b)/(1024*1024))
@@ -116,35 +254,29 @@ func restoreTargetDir(cfg config, saveDir, name string) string {
 	return filepath.Join(saved, saveDir)
 }
 
-// archiveWorld is the name of the world file an archive carries, which says which map it belongs to.
-// Read before anything is restored, so a mismatch is refused while the server is still up rather
-// than discovered afterwards. An archive without a world (arkmanager writes one when its
-// configuration names a map whose world does not exist) comes back empty.
-func archiveWorld(entry backupEntry, path string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
+// restoreConflict says why an archive must not be unpacked into the save game in force, or nil when
+// there is no reason. Checked before the server is stopped, so a mismatch costs a message instead of
+// a shutdown, and kept apart from the handler so the two refusals can be tested without a running
+// deployment behind them.
+//
+// activeMap may be empty when the map could not be resolved. Then the map check is skipped rather
+// than guessed, because refusing every archive would be worse than the risk it guards against.
+func restoreConflict(entry backupEntry, saveDir, activeMap string) error {
+	if entry.HasWorld() && activeMap != "" && !strings.EqualFold(entry.World, activeMap+".ark") {
+		return fmt.Errorf(
+			"Diese Sicherung enthält %s, geladen ist aber %s. Zurückspielen würde eine fremde Welt in den laufenden Spielstand schreiben.",
+			entry.World, activeMap)
 	}
-	defer f.Close()
-
-	var src io.Reader = f
-	if strings.HasSuffix(entry.Name, ".bz2") {
-		src = bzip2.NewReader(f)
+	// One level finer than the map: two save games of one map pass the check above and are still two
+	// different worlds. Only a stamped archive can be checked this way. An unstamped one predates the
+	// stamp and is let through, because refusing everything older than the feature would take the
+	// backups of this deployment away from it.
+	if entry.Stamped() && !strings.EqualFold(entry.SaveGame, saveDir) {
+		return fmt.Errorf(
+			"Diese Sicherung stammt aus dem Spielstand %q, geladen ist %q. Zurückspielen würde eine fremde Welt in den laufenden Spielstand schreiben.",
+			entry.SaveGame, saveDir)
 	}
-	tr := tar.NewReader(src)
-	for {
-		h, err := tr.Next()
-		if err == io.EOF {
-			return "", nil
-		}
-		if err != nil {
-			return "", fmt.Errorf("archiv %s lesen: %w", entry.Name, err)
-		}
-		name := filepath.Base(filepath.ToSlash(h.Name))
-		if h.Typeflag == tar.TypeReg && strings.HasSuffix(name, ".ark") {
-			return name, nil
-		}
-	}
+	return nil
 }
 
 // restoreBackup unpacks one archive over the live files. It replaces only what the archive carries

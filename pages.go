@@ -300,13 +300,58 @@ func saveSettingsHandler(cfg config, screen settingsScreen) http.HandlerFunc {
 }
 
 type backupPage struct {
-	Chrome  pageChrome
-	Backups []backupEntry
+	Chrome pageChrome
+	Groups []backupGroup
+	// Any is false when there is no archive at all, which reads better than an empty group list in
+	// the template.
+	Any bool
+	// SaveGame is the save directory in force, and therefore where a restore writes no matter which
+	// archive is picked. Named on the page because an archive of the same map from another save game
+	// looks exactly like the right one.
+	SaveGame string
 	// CanRestore is false without Docker access. A restore has to stop the server and start it
 	// again, and unpacking underneath a running server would look like it worked and change nothing.
 	CanRestore bool
 	Flash      string
 	Failed     bool
+}
+
+// backupGroup collects the archives of one map. The map is the only grouping an archive carries on
+// its own, which is exactly why the save game had to be stamped from outside.
+type backupGroup struct {
+	// Map is the map code, empty for the group of archives that carry no world at all.
+	Map     string
+	Entries []backupEntry
+}
+
+// groupBackups keeps the listing's order: entries stay newest first, and a group follows its newest
+// entry. Archives without a world go last, because they are not a map's backups in any useful
+// sense and should not sit between the ones that are.
+func groupBackups(entries []backupEntry) []backupGroup {
+	var groups []backupGroup
+	at := map[string]int{}
+	for _, e := range entries {
+		if !e.HasWorld() {
+			continue
+		}
+		i, ok := at[e.Map]
+		if !ok {
+			groups = append(groups, backupGroup{Map: e.Map})
+			i = len(groups) - 1
+			at[e.Map] = i
+		}
+		groups[i].Entries = append(groups[i].Entries, e)
+	}
+	var worldless backupGroup
+	for _, e := range entries {
+		if !e.HasWorld() {
+			worldless.Entries = append(worldless.Entries, e)
+		}
+	}
+	if len(worldless.Entries) > 0 {
+		groups = append(groups, worldless)
+	}
+	return groups
 }
 
 func backupsHandler(cfg config) http.HandlerFunc {
@@ -316,7 +361,12 @@ func backupsHandler(cfg config) http.HandlerFunc {
 		if err != nil {
 			page.Flash, page.Failed = "Sicherungen nicht lesbar: "+err.Error(), true
 		}
-		page.Backups = entries
+		page.Groups, page.Any = groupBackups(entries), len(entries) > 0
+		// Unreadable is not fatal here: the listing is still worth showing, it just cannot name the
+		// target of a restore.
+		if file, err := readInstanceFile(cfg); err == nil {
+			page.SaveGame = file.saveDirOrDefault()
+		}
 		if n := r.URL.Query().Get("restored"); n != "" {
 			page.Flash = n + " Datei(en) zurückgespielt, der Server läuft wieder."
 		}
@@ -385,18 +435,8 @@ func restoreBackupHandler(cfg config) http.HandlerFunc {
 		}
 		saveDir, active := file.saveDirOrDefault(), resolveMap(cfg, file)
 
-		// Refuse an archive from another map before taking the server down. The map is all an archive
-		// reveals about where it came from, so this catches the clear case and not every case: two
-		// save games of the same map cannot be told apart by their archives.
-		world, err := archiveWorld(entry, entry.path(cfg))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if world != "" && active.Value != "" && !strings.EqualFold(world, active.Value+".ark") {
-			http.Error(w, fmt.Sprintf(
-				"Diese Sicherung enthält %s, geladen ist aber %s. Zurückspielen würde eine fremde Welt in den laufenden Spielstand schreiben.",
-				world, active.Value), http.StatusConflict)
+		if err := restoreConflict(entry, saveDir, active.Value); err != nil {
+			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
 

@@ -60,6 +60,9 @@ type config struct {
 	docker   dockerConfig
 	// pending carries the "edited, not yet restarted" marker across requests.
 	pending *restartFlag
+	// archives caches what each backup archive says about itself, which costs a decompression to
+	// find out and never changes afterwards.
+	archives *archiveCache
 }
 
 func loadConfig() config {
@@ -73,6 +76,7 @@ func loadConfig() config {
 		lanHost:    os.Getenv("ARK_LAN_HOST"),
 		envWrite:   os.Getenv("ARK_ENV_WRITE"),
 		pending:    &restartFlag{},
+		archives:   &archiveCache{},
 		rcon: rconConfig{
 			// Default to the compose service alias rather than the container name, which carries
 			// COMPOSE_PROJECT_NAME and therefore changes with the deployment.
