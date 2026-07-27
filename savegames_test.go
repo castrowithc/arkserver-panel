@@ -264,3 +264,35 @@ func writeEnv(t *testing.T, dir, content string) {
 		t.Fatal(err)
 	}
 }
+
+func TestMarkOverruledMapFlagsAValueTheSwitchHasTakenOver(t *testing.T) {
+	cfg := config{dataDir: t.TempDir()}
+	if err := os.MkdirAll(filepath.Dir(instanceCfgPath(cfg)), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	write := func(content string) {
+		if err := os.WriteFile(instanceCfgPath(cfg), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	values := func() []envValue { return []envValue{{Key: "SERVER_MAP", Value: "TheIsland"}} }
+
+	// While the instance file defers to the environment, the .env is what applies.
+	write(instanceSample)
+	if got := markOverruledMap(cfg, values())[0].Overruled; got != "" {
+		t.Errorf("marked as overruled without reason: %q", got)
+	}
+
+	// Once a literal stands there, the .env carries a value that is no longer in force.
+	write("serverMap=TheCenter\n")
+	got := markOverruledMap(cfg, values())[0].Overruled
+	if !strings.Contains(got, "TheCenter") {
+		t.Errorf("overruled note %q does not name the value in force", got)
+	}
+
+	// The same map in both places is no conflict and must not be flagged.
+	write("serverMap=TheIsland\n")
+	if got := markOverruledMap(cfg, values())[0].Overruled; got != "" {
+		t.Errorf("marked as overruled although both agree: %q", got)
+	}
+}

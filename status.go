@@ -20,6 +20,9 @@ type serverStatus struct {
 
 	Build string
 
+	// Connect is where a player points the game client, per situation.
+	Connect connectInfo
+
 	// CanStartStop tells the page whether to offer the container actions at all, rather than
 	// showing buttons that are guaranteed to fail.
 	CanStartStop bool
@@ -31,7 +34,7 @@ type serverStatus struct {
 
 // gatherStatus asks every source independently and degrades per source. A server that is down must
 // still render a page that says so, so nothing here turns a failed lookup into a failed request.
-func gatherStatus(cfg config) serverStatus {
+func gatherStatus(cfg config, requestHost string) serverStatus {
 	st := serverStatus{
 		Lifecycle: "unbekannt", Label: "unbekannt",
 		CPUPercent: "-", MemUsed: "-", MemLimit: "-", Build: "-",
@@ -47,6 +50,7 @@ func gatherStatus(cfg config) serverStatus {
 			st.CanStartStop = false
 		} else {
 			running = state.State.Running
+			st.Connect = gatherConnect(cfg, state, requestHost)
 			if state.State.Health != nil {
 				st.Health = state.State.Health.Status
 			}

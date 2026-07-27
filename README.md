@@ -12,7 +12,9 @@ Die Seiten heißen wie die Bildschirme der Referenz-Oberfläche. Wo es kein Gege
 Seite in der Navigation als eigene gekennzeichnet.
 
 - **Status:** Zustand, Healthcheck, CPU, RAM gegen das Limit, Spielerliste, installierter
-  Steam-Build. Aktualisiert sich selbst.
+  Steam-Build. Aktualisiert sich selbst. Dazu die Verbindungszeile je Lage: auf demselben Rechner,
+  im eigenen Netz (die Adresse, über die das Panel gerade erreicht wurde) und von außen, letztere
+  aus `ARK_PUBLIC_HOST`, weil sie sonst nicht bekannt ist.
 - **Lifecycle:** Neu starten (RCON, mit Speichern), Stoppen und Starten.
 - **Basiseinstellungen und Engine Einstellungen:** erzeugtes Formular über 246 Felder der beiden
   INIs, aufgeteilt wie in der Referenz (210 und 36), je Seite gruppiert und filterbar; ein Speichern
@@ -27,6 +29,11 @@ Seite in der Navigation als eigene gekennzeichnet.
 - **Logs:** read-only, jeweils das Ende der Datei.
 - **`.env`:** read-only. Als Rohtext mit maskierten Passwörtern unter Konfigurationsdateien, dazu die
   Seite „Deployment": die Werte mit Namen und der Angabe, was jeder bewirkt und wo er geändert wird.
+  Ein Wert, den etwas anderes übernommen hat, wird als nicht geltend markiert und nennt den, der gilt:
+  nach einem Spielstandwechsel steht die Karte in der Instanzdatei und nicht mehr in der `.env`.
+  Ebenfalls dort: die laufende Version des Panels, beim Bauen aus dem Git-Tag ins Programm
+  geschrieben, daneben der Sollwert aus `PANEL_VERSION` und eine Warnung, wenn beide auseinandergehen,
+  weil der Container nach der Änderung nicht neu erzeugt wurde.
 - **Was das Deployment besetzt, ist gesperrt:** neun Keys schreibt arkmanager bei jedem Start aus der
   `.env` in die `GameUserSettings.ini` (Servername, Passwörter, Slots, Mod-IDs, Ports). Das Formular
   zeigt sie mit Wert, aber schreibgeschützt und mit Begründung, statt eine Änderung anzunehmen, die
@@ -76,6 +83,7 @@ Alles über Umgebungsvariablen (`.env.example`):
 | `ARK_RCON_ADDR` / `ARK_ADMIN_PASSWORD` | RCON für Spielerliste und Neustart. |
 | `ARK_DOCKER_HOST` / `ARK_CONTAINER` | Socket-Proxy und Containername für CPU, RAM, Start und Stopp. |
 | `ARK_DATA_DIR` / `ARK_ENV_DIR` | Server-Volume und das Verzeichnis mit der `.env`. |
+| `ARK_PUBLIC_HOST` | Adresse oder Name, unter dem der Server von außen erreichbar ist. Nur für die Verbindungszeile im Status. Das Panel schlägt das nicht selbst nach: es ist bewusst ans lokale Netz gebunden, und ein Dienst in dieser Lage fragt nicht bei Dritten nach seiner eigenen Adresse. |
 
 Fehlt eine der optionalen Quellen, blendet das Panel aus, was sie braucht, und schreibt den Grund auf
 die Seite, statt den Dienst zu verweigern.

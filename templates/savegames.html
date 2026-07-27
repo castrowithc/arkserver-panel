@@ -21,6 +21,29 @@
       Spielstand: wer je Welt andere Raten will, muss sie beim Umschalten mitwechseln.
     </p>
 
+    <details class="hint">
+      <summary>Wo diese Dateien liegen</summary>
+      <p>
+        Alles unten liegt im Volume <code>ark-data</code>, im Server-Container unter <code>/app</code>.
+      </p>
+      <ul>
+        <li><code>server/ShooterGame/Saved/SavedArks/</code> ist das Standard-Save-Verzeichnis. Ein
+          weiteres liegt als Geschwister daneben, also <code>Saved/&lt;Name&gt;/</code>.</li>
+        <li>Darin flach: die Welt als <code>&lt;Karte&gt;.ark</code>, je Spieler ein Profil
+          <code>&lt;SteamID&gt;.arkprofile</code>, je Stamm eine <code>&lt;TribeID&gt;.arktribe</code>,
+          dazu die datierten Umlaufkopien des Servers und zwei eigene Sicherungskopien des Spiels.</li>
+        <li><code>server/ShooterGame/Saved/Config/LinuxServer/</code> trägt beide INI-Dateien. Sie
+          gelten für den ganzen Server, nicht je Spielstand.</li>
+        <li><code>arkmanager/instances/main.cfg</code> ist die Datei, die diese Seite schreibt: dort
+          stehen Karte und Save-Verzeichnis.</li>
+        <li><code>backup/&lt;Datum&gt;/</code> sind die Archive.</li>
+      </ul>
+      <p>
+        Profildateien tragen die SteamID im Namen und stecken auch in jeder Sicherung. Sie sind
+        personenbezogen und gehören nicht in ein öffentliches Repository.
+      </p>
+    </details>
+
     {{if not .CanSwitch}}
       <p class="hint">
         Umschalten ist nicht verfügbar: dafür muss das Panel den Server stoppen und starten können, und

@@ -16,6 +16,12 @@ import (
 //go:embed templates/*.html
 var templatesFS embed.FS
 
+// version is baked in at build time from the git tag the image is also tagged with
+// (-X main.version=...). It is the one answer that cannot drift: a version file in the repo has to
+// be kept in step by hand, and the pin in the deployment's .env says what should run, which is not
+// the same as what does run until the container has actually been recreated.
+var version = "dev"
+
 // The navigation is one fixed structure for the whole panel, so the templates read it from here
 // rather than every page carrying a copy of it through its own struct.
 var templates = template.Must(template.New("").
@@ -32,20 +38,25 @@ type config struct {
 	// the single file: a single-file mount pins an inode, so a host-side editor that replaces the
 	// file on save would leave the panel showing the old content forever.
 	envDir string
-	rcon   rconConfig
-	docker dockerConfig
+	// publicHost is how the server is reached from outside, set by the operator. The panel does not
+	// look it up: it is deliberately bound to the local network, and a service in that position must
+	// not go and ask an outside party for its own address.
+	publicHost string
+	rcon       rconConfig
+	docker     dockerConfig
 	// pending carries the "edited, not yet restarted" marker across requests.
 	pending *restartFlag
 }
 
 func loadConfig() config {
 	return config{
-		addr:    envOr("PANEL_ADDR", "127.0.0.1:8080"),
-		user:    os.Getenv("PANEL_USER"),
-		pass:    os.Getenv("PANEL_PASS"),
-		dataDir: envOr("ARK_DATA_DIR", "/data"),
-		envDir:  envOr("ARK_ENV_DIR", "/deploy"),
-		pending: &restartFlag{},
+		addr:       envOr("PANEL_ADDR", "127.0.0.1:8080"),
+		user:       os.Getenv("PANEL_USER"),
+		pass:       os.Getenv("PANEL_PASS"),
+		dataDir:    envOr("ARK_DATA_DIR", "/data"),
+		envDir:     envOr("ARK_ENV_DIR", "/deploy"),
+		publicHost: os.Getenv("ARK_PUBLIC_HOST"),
+		pending:    &restartFlag{},
 		rcon: rconConfig{
 			// Default to the compose service alias rather than the container name, which carries
 			// COMPOSE_PROJECT_NAME and therefore changes with the deployment.
@@ -110,7 +121,7 @@ func index(cfg config) http.HandlerFunc {
 			http.NotFound(w, r)
 			return
 		}
-		render(w, "index.html", indexPage{Chrome: newChrome(cfg, "status"), Status: gatherStatus(cfg)})
+		render(w, "index.html", indexPage{Chrome: newChrome(cfg, "status"), Status: gatherStatus(cfg, r.Host)})
 	}
 }
 
@@ -118,7 +129,7 @@ func index(cfg config) http.HandlerFunc {
 // reloading everything.
 func statusFragment(cfg config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		render(w, "status", gatherStatus(cfg))
+		render(w, "status", gatherStatus(cfg, r.Host))
 	}
 }
 

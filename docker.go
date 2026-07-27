@@ -45,6 +45,26 @@ type containerState struct {
 	Config struct {
 		Env []string `json:"Env"`
 	} `json:"Config"`
+	// NetworkSettings.Ports is what the host actually published, which is the only honest source for
+	// the address a player connects to: the ports inside the container are fixed by the image, the
+	// ones outside are the deployment's choice.
+	NetworkSettings struct {
+		Ports map[string][]struct {
+			HostIP   string `json:"HostIp"`
+			HostPort string `json:"HostPort"`
+		} `json:"Ports"`
+	} `json:"NetworkSettings"`
+}
+
+// publishedPort is the host port bound to a container port such as "7777/udp", empty when nothing is
+// bound. Several bindings for one port (IPv4 and IPv6) carry the same host port, so the first wins.
+func (st containerState) publishedPort(containerPort string) string {
+	for _, b := range st.NetworkSettings.Ports[containerPort] {
+		if b.HostPort != "" {
+			return b.HostPort
+		}
+	}
+	return ""
 }
 
 // dockerStats is Docker's stats document, again reduced to the fields the meters need.

@@ -16,6 +16,21 @@
       Sicherung das Schicksal der Welt, die sie sichern soll.
     </p>
 
+    <details class="hint">
+      <summary>Wo diese Dateien liegen</summary>
+      <p>
+        Im Volume <code>ark-data</code>, im Server-Container unter
+        <code>/app/backup/&lt;Datum&gt;/main.&lt;Zeitstempel&gt;.tar.bz2</code>. Im Archiv liegt ein
+        datiertes Verzeichnis und darin flach die Welt, die Spielerprofile und beide INI-Dateien, ohne
+        die Verzeichnisstruktur des Servers und ohne die Umlaufkopien.
+      </p>
+      <p>
+        Zurückgespielt wird in den Spielstand, der gerade geladen ist. Ein Archiv einer anderen Karte
+        wird abgelehnt. Zwei Spielstände derselben Karte sind an ihren Archiven allerdings nicht zu
+        unterscheiden, dort entscheidet der Zeitpunkt.
+      </p>
+    </details>
+
     {{if not .CanRestore}}
       <p class="hint">
         Zurückspielen ist nicht verfügbar: dafür muss das Panel den Server stoppen können, und dazu

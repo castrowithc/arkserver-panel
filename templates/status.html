@@ -45,6 +45,53 @@
   </div>
 </div>
 
+{{if .Connect.Known}}
+<h2>Verbinden</h2>
+<table class="list">
+  <tbody>
+    <tr>
+      <td>
+        Auf diesem Rechner
+        <div class="why">wenn Server und Spiel auf derselben Maschine laufen</div>
+      </td>
+      <td><code>{{.Connect.Local}}</code></td>
+    </tr>
+    {{if .Connect.LAN}}
+      <tr>
+        <td>
+          Im eigenen Netz
+          <div class="why">die Adresse, über die dieses Panel gerade erreicht wurde</div>
+        </td>
+        <td><code>{{.Connect.LAN}}</code></td>
+      </tr>
+    {{end}}
+    <tr>
+      <td>
+        Von außen
+        <div class="why">
+          {{if .Connect.PublicUnset}}
+            noch nicht hinterlegt: <code>ARK_PUBLIC_HOST</code> in der <code>.env</code> auf die
+            öffentliche Adresse oder den Namen des Servers setzen
+          {{else}}
+            über das Internet, auch bei einem gemieteten Server
+          {{end}}
+        </div>
+      </td>
+      <td>
+        {{if .Connect.Public}}<code>{{.Connect.Public}}</code>{{else}}<span class="muted">unbekannt</span>{{end}}
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="hint">
+  Im Spiel führt der Weg über „Server beitreten", nicht über die Serverliste allein: dort taucht der
+  Server über den Abfrage-Port <code>{{.Connect.QueryPort}}</code> auf, verbunden wird auf
+  <code>{{.Connect.GamePort}}</code>. Von außen müssen beide Ports am Router freigegeben sein. Wer
+  Zugang zu diesem Panel hat, kann den Server steuern, deshalb gehört es nie ungeschützt ins
+  Internet.
+</p>
+{{end}}
+
 {{if .PendingRestart}}
 <div class="flash pending">
   Gespeicherte Änderungen an den Konfigurationsdateien sind noch nicht in Kraft. Sie greifen mit dem

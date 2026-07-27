@@ -8,7 +8,11 @@ FROM golang:1.25-alpine@sha256:56961d79ea8129efddcc0b8643fd8a5416b4e6228cfd477e3
 WORKDIR /src
 COPY go.mod ./
 COPY . .
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /panel .
+# VERSION is baked in so the running panel can name itself without a version file anyone has to
+# keep in step. The CI passes the git tag it also tags the image with; a local build without it
+# says "dev", which is the truth for a local build.
+ARG VERSION=dev
+RUN CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=${VERSION}" -o /panel .
 
 FROM gcr.io/distroless/static-debian12:nonroot@sha256:f5b485ea962d9bd1186b2f6b3a061191539b905b82ec395de78cbfae51f20e35
 COPY --from=build /panel /panel

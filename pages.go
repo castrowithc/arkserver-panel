@@ -528,22 +528,52 @@ type envPage struct {
 	Values []envValue
 	// Stale is true when the file has been edited since the container was built, so what the page
 	// lists is not what the server is running with. Unknown without Docker access, hence Known.
-	Stale  bool
-	Known  bool
-	Flash  string
-	Failed bool
+	Stale bool
+	Known bool
+	// PanelVersion is what this binary is, baked in at build time. PanelPinned is what the deployment
+	// asks for, and the two differ until the container has been recreated.
+	PanelVersion  string
+	PanelPinned   string
+	PanelMismatch bool
+	Flash         string
+	Failed        bool
+}
+
+// markOverruledMap flags SERVER_MAP when the save-game switch has taken the map over. From that
+// moment the .env still carries the old value and the server loads another one, and a page that
+// showed only the file would be telling a truth that has stopped being one.
+func markOverruledMap(cfg config, values []envValue) []envValue {
+	file, err := readInstanceFile(cfg)
+	if err != nil {
+		return values
+	}
+	if _, isReference := envReference(file.mapValue); isReference || file.mapValue == "" {
+		// The instance file still defers to the environment, so the .env is in force.
+		return values
+	}
+	for i, v := range values {
+		if v.Key != "SERVER_MAP" || strings.EqualFold(v.Value, file.mapValue) {
+			continue
+		}
+		values[i].Overruled = file.mapValue + " (aus der arkmanager-Instanzdatei, gesetzt über die Seite Spielstände)"
+	}
+	return values
 }
 
 func envHandler(cfg config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		page := envPage{Chrome: newChrome(cfg, "deployment")}
+		page := envPage{Chrome: newChrome(cfg, "deployment"), PanelVersion: version}
 		values, err := loadEnvValues(cfg)
 		if err != nil {
 			page.Flash, page.Failed = ".env nicht lesbar: "+err.Error(), true
 			render(w, "env.html", page)
 			return
 		}
-		page.Values = values
+		page.Values = markOverruledMap(cfg, values)
+		page.PanelPinned = envFileValue(cfg, "PANEL_VERSION")
+		// A local build says "dev" and is pinned to nothing, so comparing those would produce a
+		// warning about a state that is simply not a deployment.
+		page.PanelMismatch = page.PanelPinned != "" && version != "dev" && page.PanelPinned != version
 
 		if info, err := envModified(cfg); err == nil && cfg.docker.configured() {
 			if st, err := cfg.docker.state(); err == nil && !st.Created.IsZero() {

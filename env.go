@@ -26,6 +26,10 @@ type envValue struct {
 	// Secret keeps a password off the screen; Set then still says whether one is configured.
 	Secret bool
 	Set    bool
+	// Overruled names the value that actually applies and where it comes from, for a key that
+	// something else has taken over. Empty means the value on the left is the one in force. Without
+	// this the page would show a value that is no longer true and look right doing it.
+	Overruled string
 }
 
 // envShown is what the page lists, in reading order. Structural keys (the volume, the ids, the
@@ -74,6 +78,21 @@ func loadEnvValues(cfg config) ([]envValue, error) {
 		out = append(out, v)
 	}
 	return out, nil
+}
+
+// envFileValue reads one key straight out of the file, for the keys that are not part of the listing
+// above. Used for the panel's own pin, which belongs to the deployment rather than to the game
+// session and therefore has no row of its own.
+func envFileValue(cfg config, key string) string {
+	content, err := readTextFile(envPath(cfg))
+	if err != nil {
+		return ""
+	}
+	value, occurrences := parseINI(content).lookup("", key)
+	if occurrences < 1 {
+		return ""
+	}
+	return strings.TrimSpace(value)
 }
 
 // envModified is the file's timestamp, which the page compares against the container to say whether

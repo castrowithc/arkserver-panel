@@ -41,7 +41,7 @@ func TestLifecycleOf(t *testing.T) {
 // With nothing configured the page must still render and say why the figures are missing, rather
 // than fail the request.
 func TestGatherStatusDegrades(t *testing.T) {
-	st := gatherStatus(config{dataDir: t.TempDir()})
+	st := gatherStatus(config{dataDir: t.TempDir()}, "127.0.0.1:8080")
 	if st.Lifecycle != "unbekannt" {
 		t.Errorf("want unbekannt, got %s", st.Lifecycle)
 	}
@@ -73,7 +73,7 @@ func TestGatherStatusWithDockerAndRCON(t *testing.T) {
 		docker:  docker,
 		rcon:    testConfig(rconAddr),
 	}
-	st := gatherStatus(cfg)
+	st := gatherStatus(cfg, "127.0.0.1:8080")
 
 	if st.Lifecycle != "laeuft" {
 		t.Errorf("want laeuft, got %s (%q)", st.Lifecycle, st.Notices)
@@ -119,7 +119,7 @@ func TestGatherStatusDuringWorldLoad(t *testing.T) {
 			dialTimeout: time.Second, statusBudget: 200 * time.Millisecond, commandBudget: time.Second,
 		},
 	}
-	st := gatherStatus(cfg)
+	st := gatherStatus(cfg, "127.0.0.1:8080")
 	if st.Lifecycle != "startet" {
 		t.Errorf("want startet, got %s", st.Lifecycle)
 	}

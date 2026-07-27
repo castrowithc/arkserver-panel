@@ -145,6 +145,11 @@
     .hint { font-size: .82rem; color: var(--muted); margin: .5rem 0 0; }
     /* A reservation that applies to a whole block, marked so it is not read as filler text. */
     .hint.note { border-left: 2px solid var(--warn); padding-left: .6rem; margin: .5rem 0 1rem; }
+    /* Reference material that is needed once and then in the way: folded shut, one line tall. */
+    details.hint > summary { cursor: pointer; color: var(--ink); }
+    details.hint[open] > summary { margin-bottom: .4rem; }
+    details.hint ul { margin: .3rem 0; padding-left: 1.1rem; }
+    details.hint li { margin: .2rem 0; }
 
     /* Backup list */
     table.list { width: 100%; border-collapse: collapse; margin-top: 1rem; }

@@ -77,6 +77,10 @@ jobs:
             ${{ steps.meta.outputs.tags }}
             ${{ env.SCAN_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Bake the version the image is tagged with into the binary, so the running panel can
+          # name itself and no version file has to be kept in step.
+          build-args: |
+            VERSION=${{ steps.meta.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -151,6 +155,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.meta.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
