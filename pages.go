@@ -535,9 +535,15 @@ type envPage struct {
 	PanelVersion  string
 	PanelPinned   string
 	PanelMismatch bool
-	Flash         string
-	Failed        bool
+	// CanWrite says whether this deployment wired up the writable mount. Without it the page is what
+	// it always was, a listing.
+	CanWrite bool
+	Flash    string
+	Failed   bool
 }
+
+// envFormID ties the form to the save button in the fixed head above it.
+const envFormID = "env-form"
 
 // markOverruledMap flags SERVER_MAP when the save-game switch has taken the map over. From that
 // moment the .env still carries the old value and the server loads another one, and a page that
@@ -562,7 +568,16 @@ func markOverruledMap(cfg config, values []envValue) []envValue {
 
 func envHandler(cfg config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		page := envPage{Chrome: newChrome(cfg, "deployment"), PanelVersion: version}
+		page := envPage{Chrome: newChrome(cfg, "deployment"), PanelVersion: version, CanWrite: envWritable(cfg)}
+		if page.CanWrite {
+			page.Chrome.SaveForm = envFormID
+		}
+		switch n := r.URL.Query().Get("saved"); {
+		case n == "0":
+			page.Flash = "Nichts zu speichern: die Werte stehen schon so in der Datei."
+		case n != "":
+			page.Flash = n + " Wert(e) gespeichert. Sie greifen erst, wenn der Container neu erzeugt wird."
+		}
 		values, err := loadEnvValues(cfg)
 		if err != nil {
 			page.Flash, page.Failed = ".env nicht lesbar: "+err.Error(), true
@@ -584,6 +599,37 @@ func envHandler(cfg config) http.HandlerFunc {
 			}
 		}
 		render(w, "env.html", page)
+	}
+}
+
+// saveEnvHandler writes the .env. Deliberately without the offer to apply it: applying means
+// recreating the container, which is the one thing the panel must not be able to do, and pretending
+// otherwise would be worse than saying so.
+func saveEnvHandler(cfg config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if !sameOrigin(r) {
+			http.Error(w, "cross-site request rejected", http.StatusForbidden)
+			return
+		}
+		if !envWritable(cfg) {
+			http.Error(w, "Schreiben ist in diesem Deployment nicht eingerichtet", http.StatusForbidden)
+			return
+		}
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		changed, err := applyEnvEdits(cfg, r.PostForm, time.Now())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+			return
+		}
+		http.Redirect(w, r, "/env?saved="+strconv.Itoa(changed), http.StatusSeeOther)
 	}
 }
 

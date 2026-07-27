@@ -51,8 +51,17 @@ Seite in der Navigation als eigene gekennzeichnet.
   oder keine, in beiden Fällen ohne Fehler. Ein Neustart über RCON greift hier nicht, weil der
   Supervisor seine Konfiguration behält.
 
+- **`.env` bearbeiten**, wenn das Deployment die schreibbare Einbindung setzt: ein Formular über
+  dieselben Werte, Schalter als Auswahl, Zahlen als Zahlenfeld, Passwörter als leeres Feld, das leer
+  gelassen den vorhandenen Wert behält. Geschrieben wird genau die geänderte Zeile, Kommentare bleiben.
+  Eine Kopie der Datei von vor der Änderung landet auf dem Server-Volume unter
+  `panel/env-history/`, die letzten zehn. In Kraft treten die Werte erst mit einem
+  `docker compose up -d` auf dem Host, und das sagt die Seite auch: Container erzeugen heißt Image,
+  Mounts und Privilegien wählen, und wer das über eine Weboberfläche darf, besitzt den Host. Deshalb
+  ist die Einbindung die Einzeldatei und nicht ihr Verzeichnis, in dem die Compose-Datei liegt.
+
 Bewusst nicht drin: Charaktere und Stämme, die es nur im Spiel gibt, die Parameter prozeduraler
-Karten, schreibende `.env`, Mods-Browser, geplante Neustarts. Sicherungen legt das Panel nicht selbst an: das erledigt der Server per Cron, vor jedem
+Karten, das Anwenden einer `.env`-Änderung, Mods-Browser, geplante Neustarts. Sicherungen legt das Panel nicht selbst an: das erledigt der Server per Cron, vor jedem
 Update und bei jedem Stop.
 
 ## Betrieb
@@ -83,6 +92,7 @@ Alles über Umgebungsvariablen (`.env.example`):
 | `ARK_RCON_ADDR` / `ARK_ADMIN_PASSWORD` | RCON für Spielerliste und Neustart. |
 | `ARK_DOCKER_HOST` / `ARK_CONTAINER` | Socket-Proxy und Containername für CPU, RAM, Start und Stopp. |
 | `ARK_DATA_DIR` / `ARK_ENV_DIR` | Server-Volume und das Verzeichnis mit der `.env`. |
+| `ARK_ENV_WRITE` | Pfad der zweiten, schreibbaren Einbindung der `.env` (Einzeldatei). Gesetzt wird das Formular auf der Deployment-Seite bearbeitbar, leer bleibt die Seite eine Auflistung. Nie auf das Verzeichnis zeigen lassen: dort liegt die Compose-Datei, und wer die schreibt, bestimmt beim nächsten `up -d` alles. |
 | `ARK_PUBLIC_HOST` | Adresse oder Name, unter dem der Server von außen erreichbar ist. Nur für die Verbindungszeile im Status. Das Panel schlägt das nicht selbst nach: es ist bewusst ans lokale Netz gebunden, und ein Dienst in dieser Lage fragt nicht bei Dritten nach seiner eigenen Adresse. |
 
 Fehlt eine der optionalen Quellen, blendet das Panel aus, was sie braucht, und schreibt den Grund auf

@@ -25,7 +25,12 @@ var version = "dev"
 // The navigation is one fixed structure for the whole panel, so the templates read it from here
 // rather than every page carrying a copy of it through its own struct.
 var templates = template.Must(template.New("").
-	Funcs(template.FuncMap{"navigation": func() []navSection { return navigation }}).
+	Funcs(template.FuncMap{
+		"navigation": func() []navSection { return navigation },
+		// envKind lets the .env form pick a control per key without the typing being duplicated in
+		// the template, where it could drift away from what the writer accepts.
+		"envKind": envKindName,
+	}).
 	ParseFS(templatesFS, "templates/*.html"))
 
 type config struct {
@@ -42,8 +47,12 @@ type config struct {
 	// look it up: it is deliberately bound to the local network, and a service in that position must
 	// not go and ask an outside party for its own address.
 	publicHost string
-	rcon       rconConfig
-	docker     dockerConfig
+	// envWrite is the .env mounted a second time, as a single file and writable. Empty means the
+	// deployment did not wire that up and the file stays read-only. The directory above stays
+	// read-only either way, because writable it would include the compose file.
+	envWrite string
+	rcon     rconConfig
+	docker   dockerConfig
 	// pending carries the "edited, not yet restarted" marker across requests.
 	pending *restartFlag
 }
@@ -56,6 +65,7 @@ func loadConfig() config {
 		dataDir:    envOr("ARK_DATA_DIR", "/data"),
 		envDir:     envOr("ARK_ENV_DIR", "/deploy"),
 		publicHost: os.Getenv("ARK_PUBLIC_HOST"),
+		envWrite:   os.Getenv("ARK_ENV_WRITE"),
 		pending:    &restartFlag{},
 		rcon: rconConfig{
 			// Default to the compose service alias rather than the container name, which carries
@@ -196,6 +206,7 @@ func newRouter(cfg config) http.Handler {
 	app.HandleFunc("/files/save", saveFileHandler(cfg))
 	app.HandleFunc("/logs", logsHandler(cfg))
 	app.HandleFunc("/env", envHandler(cfg))
+	app.HandleFunc("/env/save", saveEnvHandler(cfg))
 	app.HandleFunc("/savegames", savegamesHandler(cfg))
 	app.HandleFunc("/savegames/switch", switchSavegameHandler(cfg))
 	app.HandleFunc("/backups", backupsHandler(cfg))
