@@ -193,7 +193,10 @@
        exactly in the lists that get read the most. */
     details.group table.list tr:hover td { background: var(--raised); }
     table.list td.right { text-align: right; white-space: nowrap; }
-    table.list .file { font: 12px/1.4 var(--mono); color: var(--muted); word-break: break-all; }
+    /* The file name under its subject, not beside it. As an inline span it depended on the template
+       happening to leave whitespace before it, and where it did not, name and file ran together. */
+    table.list .file { display: block; font: 12px/1.4 var(--mono); color: var(--muted);
+                       word-break: break-all; }
     table.list a.dl { color: inherit; }
 
     /* Settings form */
