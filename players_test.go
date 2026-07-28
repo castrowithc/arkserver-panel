@@ -312,8 +312,7 @@ func TestStatNameFallsBackToTheIndex(t *testing.T) {
 	}
 }
 
-// A tribe file has never been seen on this deployment, so the reader must not pretend. Anything it
-// cannot name is reported rather than shown as an empty tribe.
+// A file that names no tribe is reported rather than shown as an empty tribe.
 func TestReadTribeReportsAFileItCannotName(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "1234567890.arktribe")
@@ -322,5 +321,157 @@ func TestReadTribeReportsAFileItCannotName(t *testing.T) {
 	tr := readTribe(path)
 	if tr.Err == "" {
 		t.Error("a file without a tribe name has to say so instead of showing a nameless tribe")
+	}
+}
+
+// strArray writes an ArrayProperty of strings, the way the members are stored.
+func strArray(b *bytes.Buffer, name string, values []string) {
+	var inner bytes.Buffer
+	binary.Write(&inner, binary.LittleEndian, int32(len(values)))
+	for _, v := range values {
+		str(&inner, v)
+	}
+	str(b, name)
+	str(b, "ArrayProperty")
+	binary.Write(b, binary.LittleEndian, int32(inner.Len()))
+	binary.Write(b, binary.LittleEndian, int32(0))
+	str(b, "StrProperty")
+	b.Write(inner.Bytes())
+}
+
+// u32Array writes an ArrayProperty of 32-bit ids, the parallel list to the member names.
+func u32Array(b *bytes.Buffer, name string, values []uint32) {
+	var inner bytes.Buffer
+	binary.Write(&inner, binary.LittleEndian, int32(len(values)))
+	for _, v := range values {
+		binary.Write(&inner, binary.LittleEndian, v)
+	}
+	str(b, name)
+	str(b, "ArrayProperty")
+	binary.Write(b, binary.LittleEndian, int32(inner.Len()))
+	binary.Write(b, binary.LittleEndian, int32(0))
+	str(b, "UInt32Property")
+	b.Write(inner.Bytes())
+}
+
+// tribeFixture builds a whole .arktribe in the shape of the real one: a header, then a single
+// TribeData structure carrying everything, including a tribe log whose entries must not be mistaken
+// for members. All values are invented.
+func tribeFixture(t *testing.T, name string, members []string, ids []uint32, owner uint32) []byte {
+	t.Helper()
+
+	var data bytes.Buffer
+	prop(&data, "TribeName", "StrProperty", 0, strPayload(name))
+	prop(&data, "OwnerPlayerDataID", "UInt32Property", 0, i32Payload(int32(owner)))
+	prop(&data, "TribeId", "IntProperty", 0, i32Payload(42))
+	strArray(&data, "MembersPlayerName", members)
+	u32Array(&data, "MembersPlayerDataID", ids)
+	strArray(&data, "TribeLog", []string{"Tag 1, 00:00:00: irgendetwas geschah"})
+	str(&data, "None")
+
+	var b bytes.Buffer
+	// The header: a class name and a table of plain strings back to back, like the real file.
+	binary.Write(&b, binary.LittleEndian, int32(1))
+	binary.Write(&b, binary.LittleEndian, int32(1))
+	b.Write(make([]byte, 16))
+	str(&b, "PrimalTribeData")
+	binary.Write(&b, binary.LittleEndian, int32(0))
+	str(&b, "ArkGameMode")
+	str(&b, "TheIsland")
+	b.Write(make([]byte, 12))
+	structProp(&b, "TribeData", "TribeData", data.Bytes())
+	str(&b, "None")
+	return b.Bytes()
+}
+
+// The defect this covers: the structure was entered under a name taken from the file header, which
+// is not the struct type. It never matched, so the tribe stayed shut and every tribe read as
+// unreadable.
+func TestReadTribeReadsNameMembersAndFounder(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "1883561854.arktribe")
+	writeProfile(t, path, tribeFixture(t,
+		"Teststamm",
+		[]string{"Erste Testfigur", "Zweite Testfigur"},
+		[]uint32{111, 222},
+		222,
+	))
+
+	tr := readTribe(path)
+	if tr.Err != "" {
+		t.Fatalf("readable tribe reported as broken: %s", tr.Err)
+	}
+	if tr.Name != "Teststamm" {
+		t.Errorf("tribe name %q", tr.Name)
+	}
+	if strings.Join(tr.Members, ", ") != "Erste Testfigur, Zweite Testfigur" {
+		t.Errorf("members %q", tr.Members)
+	}
+	// The founder is the member whose id matches, not simply the first one.
+	if tr.Owner != "Zweite Testfigur" {
+		t.Errorf("founder %q", tr.Owner)
+	}
+}
+
+// A founder id that matches no member leaves the founder unnamed. Naming the first member instead
+// would look right and be wrong.
+func TestReadTribeLeavesAnUnmatchedFounderUnnamed(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "1.arktribe")
+	writeProfile(t, path, tribeFixture(t, "Teststamm", []string{"Erste Testfigur"}, []uint32{111}, 999))
+
+	tr := readTribe(path)
+	if tr.Err != "" {
+		t.Fatalf("readable tribe reported as broken: %s", tr.Err)
+	}
+	if tr.Owner != "" {
+		t.Errorf("founder %q, want none", tr.Owner)
+	}
+}
+
+// The fixtures above are rebuilt from what a real file looks like, which is exactly the kind of
+// agreement that can be wrong on both sides. Point ARK_TRIBE_FILE at a real .arktribe to check the
+// reader against one; nothing from it is asserted on or printed, so no real name can end up in this
+// repository or in a test log.
+func TestReadTribeAgainstARealFile(t *testing.T) {
+	path := os.Getenv("ARK_TRIBE_FILE")
+	if path == "" {
+		t.Skip("ARK_TRIBE_FILE not set")
+	}
+	tr := readTribe(path)
+	if tr.Err != "" {
+		t.Fatalf("real tribe file reported as broken: %s", tr.Err)
+	}
+	if tr.Name == "" {
+		t.Error("no tribe name")
+	}
+	if len(tr.Members) == 0 {
+		t.Error("no members")
+	}
+	if tr.Owner == "" {
+		t.Error("no founder, so the id lists did not line up")
+	}
+	t.Logf("read a tribe: %d characters in the name, %d members, founder named", len(tr.Name), len(tr.Members))
+}
+
+// An array whose count cannot fit in the bytes the array declares is a misread, and must not size an
+// allocation. The reader falls back to skipping the block.
+func TestArrayWithAnImpossibleCountIsSkipped(t *testing.T) {
+	var b bytes.Buffer
+	str(&b, "MembersPlayerName")
+	str(&b, "ArrayProperty")
+	binary.Write(&b, binary.LittleEndian, int32(8))
+	binary.Write(&b, binary.LittleEndian, int32(0))
+	str(&b, "StrProperty")
+	binary.Write(&b, binary.LittleEndian, int32(1<<30))
+	b.Write(make([]byte, 4))
+	str(&b, "None")
+
+	p, err := parseProps(b.Bytes(), 0, nestedProfileStructs)
+	if err != nil {
+		t.Fatalf("the block should be skipped, not fail: %v", err)
+	}
+	if got := p.strs("MembersPlayerName"); got != nil {
+		t.Errorf("a misread count produced %v", got)
 	}
 }

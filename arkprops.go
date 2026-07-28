@@ -208,12 +208,63 @@ func (r *reader) value(typ string, size int, name string, nested map[string]bool
 			r.off = end
 			return sub, err
 		}
+		if typ == "ArrayProperty" {
+			if v, ok := r.array(inner, end); ok {
+				r.off = end
+				return v, nil
+			}
+		}
 		r.off = end
 		return fmt.Sprintf("<%s>", inner), nil
 	default:
 		r.off += size
 		return nil, nil
 	}
+}
+
+// array reads the two kinds of array worth having: a list of strings and a list of 32-bit numbers.
+// Both begin with a count. Anything else stays a skipped block, because an array of structs would
+// mean understanding the struct, and none of the answers here need one.
+//
+// A refusal here costs nothing: the caller falls back to skipping the array by its own size, which
+// is what happened to every array before this existed.
+func (r *reader) array(inner string, end int) (any, bool) {
+	n, err := r.i32()
+	if err != nil || n < 0 {
+		return nil, false
+	}
+	// No entry of either kind is shorter than its four-byte prefix, so a count that cannot fit is a
+	// count that was misread. Without this a corrupt length would size an allocation.
+	if int(n)*4 > end-r.off {
+		return nil, false
+	}
+	switch inner {
+	case "StrProperty":
+		out := make([]string, 0, n)
+		for i := int32(0); i < n; i++ {
+			s, err := r.str()
+			if err != nil || r.off > end {
+				return nil, false
+			}
+			out = append(out, s)
+		}
+		return out, true
+	case "UInt32Property", "IntProperty":
+		out := make([]int64, 0, n)
+		for i := int32(0); i < n; i++ {
+			v, err := r.i32()
+			if err != nil || r.off > end {
+				return nil, false
+			}
+			if inner == "IntProperty" {
+				out = append(out, int64(v))
+			} else {
+				out = append(out, int64(uint32(v)))
+			}
+		}
+		return out, true
+	}
+	return nil, false
 }
 
 type reader struct {
@@ -286,6 +337,19 @@ func (p props) float(name string) (float64, bool) {
 func (p props) sub(name string) (props, bool) {
 	v, ok := p.values[propKey{Name: name}].(props)
 	return v, ok
+}
+
+// strs and nums answer an array property. An absent one is an empty list, which reads the same as an
+// array with nothing in it and needs no separate handling anywhere.
+
+func (p props) strs(name string) []string {
+	v, _ := p.values[propKey{Name: name}].([]string)
+	return v
+}
+
+func (p props) nums(name string) []int64 {
+	v, _ := p.values[propKey{Name: name}].([]int64)
+	return v
 }
 
 // indexed collects every occurrence of one name, keyed by its index. This is how the per-stat

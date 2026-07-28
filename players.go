@@ -40,9 +40,9 @@ type statPoints struct {
 	Points int64
 }
 
-// tribe is one tribe in one save game. Unlike the characters this is not measured against a real
-// file: no deployment here has ever had a tribe. Everything it reads is therefore optional, and a
-// file that does not answer is reported as unreadable rather than shown as an empty tribe.
+// tribe is one tribe in one save game, measured against a real file since the migration brought one
+// in. Every field stays optional: a file that names no tribe is reported as unreadable rather than
+// shown as an empty tribe.
 type tribe struct {
 	Name    string
 	Owner   string
@@ -61,11 +61,16 @@ var arkStats = []string{
 
 // nestedProfileStructs are the only structures worth stepping into. Everything else in a profile is
 // colours, bone sliders and item lists, which are bytes to skip rather than a property list.
+//
+// The tribe's structure is called TribeData. It used to say PrimalTribeData here, taken from the
+// class name in the file header, and that name never appears as a struct type: the entry did
+// nothing, the structure stayed shut, and every tribe came out unreadable. The first real tribe file
+// on this deployment is what showed it.
 var nestedProfileStructs = map[string]bool{
 	"PrimalPlayerDataStruct":               true,
 	"PrimalPlayerCharacterConfigStruct":    true,
 	"PrimalPersistentCharacterStatsStruct": true,
-	"PrimalTribeData":                      true,
+	"TribeData":                            true,
 }
 
 // listCharacters reads every profile in one save directory. A file that cannot be read becomes an
@@ -140,8 +145,8 @@ func statName(index int32) string {
 	return fmt.Sprintf("Status %d", index)
 }
 
-// listTribes reads every tribe file in one save directory. Unverified against a real file, which is
-// why every field is optional and a file that yields no name at all counts as unreadable.
+// listTribes reads every tribe file in one save directory. A file that yields no name at all counts
+// as unreadable and says so, rather than appearing as a tribe without one.
 func listTribes(cfg config, saveDir string) ([]tribe, error) {
 	paths, err := saveFiles(cfg, saveDir, ".arktribe")
 	if err != nil {
@@ -167,24 +172,29 @@ func readTribe(path string) tribe {
 		t.Err = err.Error()
 		return t
 	}
-	// The tribe data may sit one level down, the way a profile's does, or at the top. Both are
-	// tried rather than assumed, because which one it is has never been measured here.
+	// Everything sits one level down, inside the TribeData structure. The top level is tried as well
+	// and costs nothing, so a file that ever puts them at the root still reads.
 	data := root
 	if sub, ok := root.sub("TribeData"); ok {
 		data = sub
 	}
 	t.Name, _ = data.str("TribeName")
-	t.Owner, _ = data.str("OwnerPlayerName")
-	for _, key := range data.order {
-		if key.Name != "MembersPlayerName" {
-			continue
-		}
-		if name, ok := data.values[key].(string); ok && name != "" {
-			t.Members = append(t.Members, name)
+	t.Members = data.strs("MembersPlayerName")
+
+	// The file names no founder. It carries the founder's account id and, in parallel, the members
+	// with their ids, so the name comes from lining the two up. Absent, mismatched or ragged lists
+	// leave the founder unnamed rather than guessed.
+	if owner, ok := data.num("OwnerPlayerDataID"); ok {
+		for i, id := range data.nums("MembersPlayerDataID") {
+			if id == owner && i < len(t.Members) {
+				t.Owner = t.Members[i]
+				break
+			}
 		}
 	}
+
 	if t.Name == "" {
-		t.Err = "die Datei nennt keinen Stammnamen; das Format weicht von dem der Profile ab"
+		t.Err = "die Datei nennt keinen Stammnamen"
 	}
 	return t
 }
