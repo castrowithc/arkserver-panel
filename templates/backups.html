@@ -79,6 +79,7 @@
             es war, sagt nur der Zeitpunkt.
           </p>
         {{end}}
+        <div class="scroll">
         <table class="list">
           <thead>
             <tr>
@@ -103,7 +104,7 @@
                     <form method="post" action="/backups/restore" class="inline"
                           onsubmit="return confirm('Sicherung vom {{.Time}} zurückspielen?\n\nZiel ist der geladene Spielstand {{$.SaveGame}}.\nHerkunft dieser Sicherung: {{if .Stamped}}{{.SaveGame}}.{{else}}unbekannt, das Archiv ist älter als die Kennzeichnung. Ob es aus diesem Spielstand stammt, sagt nur der Zeitpunkt.{{end}}\n{{if .HasWorld}}Enthaltene Welt: {{.World}} ({{.WorldSizeText}}).{{else}}Dieses Archiv enthält KEINE Welt. Zurückgespielt werden nur Profile und Einstellungen; die laufende Welt bleibt, wie sie ist.{{end}}\n\nDer Server wird gestoppt. Die enthaltenen Dateien ersetzen den aktuellen Stand, die Einstellungen gehen also ebenfalls auf diesen Stand zurück.\n\nDas dauert einige Minuten.')">
                       <input type="hidden" name="b" value="{{.ID}}">
-                      <button type="submit">Zurückspielen</button>
+                      <button type="submit" class="danger">Zurückspielen</button>
                     </form>
                   {{end}}
                 </td>
@@ -111,6 +112,7 @@
             {{end}}
           </tbody>
         </table>
+        </div>
       </details>
       {{end}}
     {{end}}

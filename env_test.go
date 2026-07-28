@@ -122,27 +122,36 @@ func TestDeploymentPageListsTheValuesWithTheirOwner(t *testing.T) {
 	}
 }
 
-func TestDeploymentPageNeverShowsAPassword(t *testing.T) {
+// A password is readable here on purpose: the operator owns it, needs it to join their own server,
+// and finds it on the settings page anyway, where arkmanager's own keys stand unmasked. What the page
+// must not do is put it on screen unasked, so it goes behind a fold.
+func TestDeploymentPageFoldsAPasswordAway(t *testing.T) {
 	cfg := envFixtureCfg(t)
 	values, err := loadEnvValues(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, v := range values {
-		if v.Secret && v.Value != "" {
-			t.Errorf("%s carries its value", v.Key)
-		}
-	}
-	// And a configured password is still reported as configured, or the page would read as if none
-	// were set.
-	for _, v := range values {
-		if v.Key == "ADMIN_PASSWORD" && !v.Set {
-			t.Error("a password that is set should read as set")
+		if v.Key == "ADMIN_PASSWORD" {
+			if !v.Set {
+				t.Error("a password that is set should read as set")
+			}
+			if v.Value != "auch-geheim" {
+				t.Errorf("ADMIN_PASSWORD carries %q, so the fold would open on nothing", v.Value)
+			}
 		}
 	}
 
-	rec := get(t, newRouter(cfg), "/env")
-	if strings.Contains(rec.Body.String(), "geheim") {
-		t.Error("a password reached the rendered page")
+	body := get(t, newRouter(cfg), "/env").Body.String()
+	if !strings.Contains(body, "auch-geheim") {
+		t.Error("the password never reached the page")
+	}
+	if !strings.Contains(body, `<details class="reveal">`) {
+		t.Error("no fold on the page, so the password stands open")
+	}
+	// Never in the input itself. Prefilling it would put the password on screen the moment the
+	// browser renders, and a save would then resubmit it instead of leaving it untouched.
+	if strings.Contains(body, `value="auch-geheim"`) {
+		t.Error("the password sits in the input value")
 	}
 }

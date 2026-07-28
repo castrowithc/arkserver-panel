@@ -23,7 +23,11 @@ type envValue struct {
 	// Effect says what the value does in this deployment, which is also why it is not in the form.
 	Effect string
 	Value  string
-	// Secret keeps a password off the screen; Set then still says whether one is configured.
+	// Secret marks a credential. The value is carried and rendered like any other, but folded shut,
+	// so reading it is a deliberate click rather than something a shared screen gives away. Hiding it
+	// outright would be theatre: the same two passwords stand in plain sight on the settings page,
+	// because arkmanager writes them into GameUserSettings.ini at every start and a locked field
+	// shows its value. Set says whether one is configured at all.
 	Secret bool
 	Set    bool
 	// Overruled names the value that actually applies and where it comes from, for a key that
@@ -71,9 +75,7 @@ func loadEnvValues(cfg config) ([]envValue, error) {
 		value, occurrences := file.lookup("", e.key)
 		if occurrences >= 1 {
 			v.Set = strings.TrimSpace(value) != ""
-			if !v.Secret {
-				v.Value = value
-			}
+			v.Value = value
 		}
 		out = append(out, v)
 	}

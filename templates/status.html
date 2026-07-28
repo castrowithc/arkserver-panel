@@ -11,7 +11,7 @@
   {{if .CanStartStop}}
     <form method="post" action="/stop" class="inline"
           onsubmit="return confirm('Server stoppen? Er bleibt aus, bis er hier wieder gestartet wird.')">
-      <button type="submit" {{if eq .Lifecycle "gestoppt"}}disabled{{end}}>Stoppen</button>
+      <button type="submit" class="danger" {{if eq .Lifecycle "gestoppt"}}disabled{{end}}>Stoppen</button>
     </form>
     <form method="post" action="/start" class="inline">
       <button type="submit" {{if ne .Lifecycle "gestoppt"}}disabled{{end}}>Starten</button>
@@ -92,20 +92,23 @@
     </tr>
   </tbody>
 </table>
-<p class="hint">
-  Der Port ist in allen drei Fällen derselbe, nur die Adresse davor wechselt. Über den Abfrage-Port
-  <code>{{.Connect.QueryPort}}</code> taucht der Server in der Serverliste auf, verbunden wird auf
-  <code>{{.Connect.GamePort}}</code>, und ARK belegt zusätzlich den Spielport plus eins. Im eigenen
-  Netz ist dafür nichts weiter nötig, nur die Firewall dieses Rechners muss die drei Ports
-  hereinlassen. Von außen kommen sie zusätzlich in die Portfreigabe des Routers, beim gemieteten
-  Server in dessen Firewall. Der RCON-Port gehört in keinem Fall dorthin.
-</p>
-<p class="hint">
-  Dieses Panel selbst ist nur auf diesem Rechner erreichbar, absichtlich. Dass es von einem anderen
-  Gerät nicht aufgeht, sagt nichts über den Spielserver: dessen Ports sind auf allen Schnittstellen
-  veröffentlicht. Wer Zugang zum Panel hat, kann den Server steuern, deshalb gehört es nie
-  ungeschützt ins Netz.
-</p>
+<details class="hint">
+  <summary>Ports und Erreichbarkeit</summary>
+  <p>
+    Der Port ist in allen drei Fällen derselbe, nur die Adresse davor wechselt. Über den Abfrage-Port
+    <code>{{.Connect.QueryPort}}</code> taucht der Server in der Serverliste auf, verbunden wird auf
+    <code>{{.Connect.GamePort}}</code>, und ARK belegt zusätzlich den Spielport plus eins. Im eigenen
+    Netz ist dafür nichts weiter nötig, nur die Firewall dieses Rechners muss die drei Ports
+    hereinlassen. Von außen kommen sie zusätzlich in die Portfreigabe des Routers, beim gemieteten
+    Server in dessen Firewall. Der RCON-Port gehört in keinem Fall dorthin.
+  </p>
+  <p>
+    Dieses Panel selbst ist nur auf diesem Rechner erreichbar, absichtlich. Dass es von einem anderen
+    Gerät nicht aufgeht, sagt nichts über den Spielserver: dessen Ports sind auf allen Schnittstellen
+    veröffentlicht. Wer Zugang zum Panel hat, kann den Server steuern, deshalb gehört es nie
+    ungeschützt ins Netz.
+  </p>
+</details>
 {{end}}
 
 {{if .PendingRestart}}

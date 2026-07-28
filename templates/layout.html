@@ -89,6 +89,10 @@
     button:disabled { opacity: .45; cursor: not-allowed; }
     .topbar button[type=submit][form] { background: var(--accent); color: var(--accent-ink);
                                         border-color: var(--accent); font-weight: 600; }
+    /* An action that ends something or overwrites it. Outlined rather than filled: the filled
+       button is the one you are meant to press, and this one never is. */
+    button.danger { color: var(--bad); border-color: var(--bad); }
+    button.danger:hover:not(:disabled) { background: var(--bad); color: var(--accent-ink); }
 
     .bar { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
            border: 1px solid var(--line); border-radius: var(--radius); padding: .8rem 1rem;
@@ -145,6 +149,11 @@
     .hint { font-size: .82rem; color: var(--muted); margin: .5rem 0 0; }
     /* A reservation that applies to a whole block, marked so it is not read as filler text. */
     .hint.note { border-left: 2px solid var(--warn); padding-left: .6rem; margin: .5rem 0 1rem; }
+    /* A credential: present, but a click away rather than on screen the moment the page opens. */
+    details.reveal > summary { cursor: pointer; font-size: .8rem; color: var(--muted); width: fit-content; }
+    details.reveal > summary:hover { color: var(--ink); }
+    details.reveal code { font-size: .85rem; word-break: break-all; }
+
     /* Reference material that is needed once and then in the way: folded shut, one line tall. */
     details.hint > summary { cursor: pointer; color: var(--ink); }
     details.hint[open] > summary { margin-bottom: .4rem; }
@@ -162,17 +171,27 @@
     details.group .group-meta { font-size: .8rem; margin-left: auto;
                                 font-variant-numeric: tabular-nums; }
     details.group > .hint { padding: 0 .85rem; }
-    details.group > table.list { margin-top: 0; }
-    details.group > table.list th:first-child,
-    details.group > table.list td:first-child { padding-left: .85rem; }
-    details.group > table.list th:last-child,
-    details.group > table.list td:last-child { padding-right: .85rem; }
+    /* Descendant rather than child: a wide table sits in a .scroll box inside the group, and a
+       child selector would stop at that box. */
+    details.group table.list { margin-top: 0; }
+    details.group table.list th:first-child,
+    details.group table.list td:first-child { padding-left: .85rem; }
+    details.group table.list th:last-child,
+    details.group table.list td:last-child { padding-right: .85rem; }
+
+    /* A table wide enough to need it scrolls inside its own box. Without this the page itself
+       scrolls sideways, which moves the fixed frames along with it and loses the first column. */
+    .scroll { overflow-x: auto; }
+    .scroll > table.list { min-width: 34rem; }
 
     table.list { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     table.list th { text-align: left; font-size: .7rem; font-weight: 600; color: var(--muted);
                     text-transform: uppercase; letter-spacing: .07em; padding: .4rem .5rem; }
     table.list td { padding: .55rem .5rem; border-top: 1px solid var(--line); vertical-align: baseline; }
     table.list tr:hover td { background: var(--surface); }
+    /* Inside a group the table already sits on --surface, so the hover above would be invisible
+       exactly in the lists that get read the most. */
+    details.group table.list tr:hover td { background: var(--raised); }
     table.list td.right { text-align: right; white-space: nowrap; }
     table.list .file { font: 12px/1.4 var(--mono); color: var(--muted); word-break: break-all; }
     table.list a.dl { color: inherit; }
@@ -216,6 +235,15 @@
       body.side-open .sidebar { transform: none; box-shadow: 0 0 2rem #0008; }
       .toggle { display: inline-flex !important; }
       .row { grid-template-columns: 1fr; }
+      /* The head keeps its height, so the page below it stays where it is. What does not fit
+         goes: first the page name, which the navigation says anyway, then the rest scrolls
+         rather than being cut off. Nothing is dropped, because every button in here is an
+         action with no second way to reach it. */
+      .where { display: none; }
+      .topbar { overflow-x: auto; gap: .5rem; }
+      .topbar h1 { flex: none; }
+      /* A group head stacks instead of pushing its count off the edge. */
+      details.group .group-meta { margin-left: 0; flex-basis: 100%; }
     }
     .toggle { display: none; }
   </style>

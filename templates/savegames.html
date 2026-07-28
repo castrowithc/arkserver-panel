@@ -15,10 +15,8 @@
       Verlassen hatten.
     </p>
     <p class="hint">
-      Charaktere und Stämme gehören zur Welt und wandern nicht mit. Auf einem anderen Spielstand
-      beginnt jeder Spieler neu; wer einen Charakter mitnehmen will, braucht den Transfer am Obelisken
-      und einen Cluster. Die Einstellungen dagegen gelten für den ganzen Server und nicht je
-      Spielstand: wer je Welt andere Raten will, muss sie beim Umschalten mitwechseln.
+      Die Einstellungen gelten für den ganzen Server und nicht je Spielstand: wer je Welt andere
+      Raten will, muss sie beim Umschalten mitwechseln.
     </p>
 
     <details class="hint">
@@ -75,6 +73,7 @@
     {{if not .Saves}}
       <p class="muted">Noch kein Spielstand auf der Platte.</p>
     {{else}}
+      <div class="scroll">
       <table class="list">
         <thead>
           <tr>
@@ -107,6 +106,7 @@
           {{end}}
         </tbody>
       </table>
+      </div>
       <p class="hint">
         Die Welt-Datei einer Karte entsteht erst beim ersten Speichern, nicht beim Laden. Ein frisch
         angelegter Spielstand steht deshalb kurz ohne Größe in der Liste.
@@ -169,7 +169,9 @@
       Charaktere und Stämme gehören dem Save-Verzeichnis, nicht der einzelnen Karte: liegen mehrere
       Welten im selben Verzeichnis, teilen sie sich dieselben Charaktere. Deshalb behält ein
       Kartenwechsel innerhalb eines Verzeichnisses den Charakter, und nur ein Wechsel des
-      Verzeichnisses gibt einen neuen. Gelesen wird nur; angelegt und gelöscht wird im Spiel.
+      Verzeichnisses gibt einen neuen. Wer einen Charakter über diese Grenze mitnehmen will, braucht
+      den Transfer am Obelisken und einen Cluster. Gelesen wird hier nur; angelegt und gelöscht wird
+      im Spiel.
     </p>
 
     {{range .People}}
@@ -188,6 +190,7 @@
         {{if not .Characters}}
           <p class="hint">Keine Charaktere in diesem Verzeichnis.</p>
         {{else}}
+          <div class="scroll">
           <table class="list">
             <thead>
               <tr>
@@ -228,9 +231,11 @@
               {{end}}
             </tbody>
           </table>
+          </div>
         {{end}}
 
         {{if .Tribes}}
+          <div class="scroll">
           <table class="list">
             <thead>
               <tr>
@@ -262,6 +267,7 @@
               {{end}}
             </tbody>
           </table>
+          </div>
         {{end}}
       </details>
     {{end}}
