@@ -52,22 +52,36 @@
       <p class="muted">Noch keine Sicherungen vorhanden.</p>
     {{else}}
       {{range .Groups}}
-        {{if .Map}}
-          <h2>{{.Map}}</h2>
-        {{else}}
-          <h2>Ohne Welt-Stand</h2>
+      <details class="group" {{if .Open}}open{{end}}>
+        <summary>
+          {{if .Map}}
+            <span class="group-name">{{.MapLabel}}
+              {{if .SaveGame}}<span class="muted">·</span> {{.DirLabel}}{{else}}<span class="muted">· Herkunft unbekannt</span>{{end}}
+            </span>
+          {{else}}
+            <span class="group-name">Ohne Welt-Stand</span>
+          {{end}}
+          <span class="group-meta muted">{{len .Entries}} Sicherungen, zuletzt {{.Latest}}</span>
+        </summary>
+
+        {{if not .Map}}
           <p class="hint">
             Diese Archive enthalten keine Welt, sondern nur Spielerprofile und die beiden
             INI-Dateien. So etwas entsteht im Zeitfenster zwischen einem Kartenwechsel und dem ersten
             Speichern: die Welt-Datei der neuen Karte gibt es dann noch nicht. Zurückspielen setzt
             damit die Einstellungen zurück und lässt die laufende Welt unberührt.
           </p>
+        {{else if not .SaveGame}}
+          <p class="hint">
+            Diese Archive sind älter als die Kennzeichnung und sagen nicht, aus welchem Spielstand sie
+            stammen. Sie stehen deshalb für sich: sie einem Stand zuzuschlagen wäre geraten. Welcher
+            es war, sagt nur der Zeitpunkt.
+          </p>
         {{end}}
         <table class="list">
           <thead>
             <tr>
               <th>Zeitpunkt</th>
-              <th>Spielstand</th>
               <th>Welt</th>
               <th>Archiv</th>
               <th></th>
@@ -79,9 +93,6 @@
                 <td>
                   {{.Time}}
                   <span class="file">{{.Name}}</span>
-                </td>
-                <td>
-                  {{if .Stamped}}<code>{{.SaveGame}}</code>{{else}}<span class="muted">unbekannt</span>{{end}}
                 </td>
                 <td class="right">{{if .HasWorld}}{{.WorldSizeText}}{{else}}<span class="muted">keine</span>{{end}}</td>
                 <td class="right">{{.Size}}</td>
@@ -99,6 +110,7 @@
             {{end}}
           </tbody>
         </table>
+      </details>
       {{end}}
     {{end}}
   </main>

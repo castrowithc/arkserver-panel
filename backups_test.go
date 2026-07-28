@@ -390,12 +390,12 @@ func TestStampIsPickedUpWhenItArrivesAfterTheArchive(t *testing.T) {
 
 func TestGroupBackupsKeepsOrderAndPutsWorldlessArchivesLast(t *testing.T) {
 	entries := []backupEntry{
-		{Name: "a", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland"}},
+		{Name: "a", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland", SaveGame: "SavedArks"}},
 		{Name: "b"},
-		{Name: "c", archiveInfo: archiveInfo{World: "TheCenter.ark", Map: "TheCenter"}},
-		{Name: "d", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland"}},
+		{Name: "c", archiveInfo: archiveInfo{World: "TheCenter.ark", Map: "TheCenter", SaveGame: "SavedArks"}},
+		{Name: "d", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland", SaveGame: "SavedArks"}},
 	}
-	groups := groupBackups(entries)
+	groups := groupBackups(entries, "TheIsland", "SavedArks")
 	if len(groups) != 3 {
 		t.Fatalf("%d groups, want 3", len(groups))
 	}
@@ -408,6 +408,72 @@ func TestGroupBackupsKeepsOrderAndPutsWorldlessArchivesLast(t *testing.T) {
 	}
 	if groups[2].Map != "" || len(groups[2].Entries) != 1 || groups[2].Entries[0].Name != "b" {
 		t.Errorf("worldless group %+v", groups[2])
+	}
+}
+
+// Two save games of one map are two worlds with two sets of characters. Grouping by map alone put
+// them in one table, which is the case the split exists for.
+func TestGroupBackupsSeparatesSaveGamesOfTheSameMap(t *testing.T) {
+	entries := []backupEntry{
+		{Name: "a", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland", SaveGame: "SavedArks"}},
+		{Name: "b", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland", SaveGame: "SavedArks2"}},
+		{Name: "c", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland", SaveGame: "SavedArks"}},
+	}
+	groups := groupBackups(entries, "TheIsland", "SavedArks2")
+	if len(groups) != 2 {
+		t.Fatalf("%d groups, want 2", len(groups))
+	}
+	if groups[0].SaveGame != "SavedArks" || len(groups[0].Entries) != 2 {
+		t.Errorf("first group %q with %d entries", groups[0].SaveGame, len(groups[0].Entries))
+	}
+	if groups[1].SaveGame != "SavedArks2" || len(groups[1].Entries) != 1 {
+		t.Errorf("second group %q with %d entries", groups[1].SaveGame, len(groups[1].Entries))
+	}
+	// The one being played opens, not the one that happens to be newest.
+	if groups[0].Open || !groups[1].Open {
+		t.Errorf("open flags %v, %v, want the active save game open", groups[0].Open, groups[1].Open)
+	}
+}
+
+// An unstamped archive predates the stamp. Filing it under the default save game would be a guess
+// dressed up as an answer, so it gets a group of its own and that group never counts as active.
+func TestGroupBackupsKeepsUnstampedArchivesOutOfEverySaveGame(t *testing.T) {
+	entries := []backupEntry{
+		{Name: "old", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland"}},
+		{Name: "new", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland", SaveGame: "SavedArks"}},
+	}
+	groups := groupBackups(entries, "TheIsland", "SavedArks")
+	if len(groups) != 2 {
+		t.Fatalf("%d groups, want 2", len(groups))
+	}
+	if groups[0].SaveGame != "" || groups[0].Entries[0].Name != "old" {
+		t.Errorf("unstamped group %+v", groups[0])
+	}
+	if groups[0].Open || !groups[1].Open {
+		t.Errorf("open flags %v, %v, want the stamped active group open", groups[0].Open, groups[1].Open)
+	}
+}
+
+// Without a readable instance file there is no active save game, and the page must not open on
+// nothing but headers.
+func TestGroupBackupsOpensTheFirstGroupWhenNoneIsActive(t *testing.T) {
+	entries := []backupEntry{
+		{Name: "a", archiveInfo: archiveInfo{World: "TheCenter.ark", Map: "TheCenter", SaveGame: "SavedArks"}},
+		{Name: "b", archiveInfo: archiveInfo{World: "TheIsland.ark", Map: "TheIsland", SaveGame: "SavedArks"}},
+	}
+	groups := groupBackups(entries, "", "")
+	if !groups[0].Open || groups[1].Open {
+		t.Errorf("open flags %v, %v, want only the first", groups[0].Open, groups[1].Open)
+	}
+}
+
+func TestBackupGroupLatestIsTheNewestEntry(t *testing.T) {
+	g := backupGroup{Entries: []backupEntry{{Time: "2026-07-28 06:14"}, {Time: "2026-07-28 00:14"}}}
+	if g.Latest() != "2026-07-28 06:14" {
+		t.Errorf("latest %q", g.Latest())
+	}
+	if (backupGroup{}).Latest() != "" {
+		t.Error("an empty group has no latest entry")
 	}
 }
 

@@ -151,7 +151,23 @@
     details.hint ul { margin: .3rem 0; padding-left: 1.1rem; }
     details.hint li { margin: .2rem 0; }
 
-    /* Backup list */
+    /* Backup list. One group per save game, folded except the one being played, because a backup
+       every six hours across several worlds is a page nobody scrolls to the end of. */
+    details.group { border: 1px solid var(--line); border-radius: var(--radius);
+                    background: var(--surface); margin-top: .6rem; }
+    details.group > summary { cursor: pointer; padding: .6rem .85rem; display: flex; flex-wrap: wrap;
+                              align-items: baseline; gap: .5rem 1rem; }
+    details.group[open] > summary { border-bottom: 1px solid var(--line); }
+    details.group .group-name { font-weight: 600; }
+    details.group .group-meta { font-size: .8rem; margin-left: auto;
+                                font-variant-numeric: tabular-nums; }
+    details.group > .hint { padding: 0 .85rem; }
+    details.group > table.list { margin-top: 0; }
+    details.group > table.list th:first-child,
+    details.group > table.list td:first-child { padding-left: .85rem; }
+    details.group > table.list th:last-child,
+    details.group > table.list td:last-child { padding-right: .85rem; }
+
     table.list { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     table.list th { text-align: left; font-size: .7rem; font-weight: 600; color: var(--muted);
                     text-transform: uppercase; letter-spacing: .07em; padding: .4rem .5rem; }

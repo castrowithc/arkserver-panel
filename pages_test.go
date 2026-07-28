@@ -206,6 +206,59 @@ func TestSavegamesPageNamesWhatIsLoadedAndWhereItComesFrom(t *testing.T) {
 	}
 }
 
+// The page itself, not just the grouping: two save games of one map have to arrive as two foldable
+// groups, and only the one being played may be open. Rendering it here is also what catches a broken
+// template, which the grouping tests alone would not.
+func TestBackupsPageFoldsEverySaveGameButTheLoadedOne(t *testing.T) {
+	cfg := filesFixture(t)
+	instances := filepath.Dir(instanceCfgPath(cfg))
+	if err := os.MkdirAll(instances, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(instanceCfgPath(cfg), []byte(instanceSample), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cfg.envDir, ".env"), []byte("SERVER_MAP=TheIsland\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Three archives of one map: two save games and one from before the stamp existed.
+	for _, a := range []struct{ name, saveDir string }{
+		{"main.2026-07-28_06.14.12.tar", savedArksDir},
+		{"main.2026-07-27_18.02.44.tar", "SavedArks2"},
+		{"main.2026-07-20_09.00.00.tar", ""},
+	} {
+		path := filepath.Join(backupDir(cfg), "2026-07-28", a.name)
+		writeArchive(t, path, map[string]string{"stamp/TheIsland.ark": "world"})
+		if a.saveDir == "" {
+			continue
+		}
+		if err := os.WriteFile(path+savegameStampSuffix, []byte("savedir="+a.saveDir+"\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	rec := get(t, newRouter(cfg), "/backups")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("want 200, got %d", rec.Code)
+	}
+	body := rec.Body.String()
+	if n := strings.Count(body, `<details class="group"`); n != 3 {
+		t.Errorf("%d groups, want one per save game plus one for the unstamped archive", n)
+	}
+	// Exactly one open group, and it is the loaded save game. The default directory is labelled, so
+	// the heading says "Standard" rather than repeating the directory name.
+	if n := strings.Count(body, `class="group" open`); n != 1 {
+		t.Errorf("%d open groups, want exactly the loaded one", n)
+	}
+	if !strings.Contains(body, "Standard") || !strings.Contains(body, "SavedArks2") {
+		t.Error("both save games should be named in a heading")
+	}
+	if !strings.Contains(body, "Herkunft unbekannt") {
+		t.Error("the unstamped archive needs a group that does not claim a save game")
+	}
+}
+
 func TestSwitchSavegameRefusesWithoutDockerAccess(t *testing.T) {
 	cfg := filesFixture(t)
 	req := httptest.NewRequest(http.MethodPost, "/savegames/switch",

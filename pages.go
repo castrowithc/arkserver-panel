@@ -316,29 +316,59 @@ type backupPage struct {
 	Failed     bool
 }
 
-// backupGroup collects the archives of one map. The map is the only grouping an archive carries on
-// its own, which is exactly why the save game had to be stamped from outside.
+// backupGroup collects the archives of one save game, which is a map inside a save directory. Only
+// the pair is an identity: the same map in two save directories is two different worlds with two
+// different sets of characters, and grouping by map alone puts them in one table.
 type backupGroup struct {
 	// Map is the map code, empty for the group of archives that carry no world at all.
-	Map     string
-	Entries []backupEntry
+	Map      string
+	MapLabel string
+	// SaveGame is the save directory the archives came from, empty when they carry no stamp. Empty is
+	// not the default directory. An unstamped archive predates the stamp and its origin is genuinely
+	// unknown, so it gets a group of its own rather than being filed under a guess.
+	SaveGame string
+	DirLabel string
+	Entries  []backupEntry
+	// Open decides whether the group starts unfolded, and only the save game being played is. With
+	// several worlds and a backup every six hours, everything unfolded is a page nobody reads to the
+	// end.
+	Open bool
+}
+
+// Latest is the newest entry's time. It belongs in the header, so a folded group still answers the
+// question the list is usually opened for.
+func (g backupGroup) Latest() string {
+	if len(g.Entries) == 0 {
+		return ""
+	}
+	return g.Entries[0].Time
 }
 
 // groupBackups keeps the listing's order: entries stay newest first, and a group follows its newest
-// entry. Archives without a world go last, because they are not a map's backups in any useful
+// entry. Archives without a world go last, because they are not a save game's backups in any useful
 // sense and should not sit between the ones that are.
-func groupBackups(entries []backupEntry) []backupGroup {
+//
+// activeMap and activeDir name the save game in force and decide which group is unfolded. Either
+// being empty simply means no group matches, which is the honest outcome when the instance file
+// could not be read.
+func groupBackups(entries []backupEntry, activeMap, activeDir string) []backupGroup {
 	var groups []backupGroup
 	at := map[string]int{}
 	for _, e := range entries {
 		if !e.HasWorld() {
 			continue
 		}
-		i, ok := at[e.Map]
+		key := e.Map + "/" + e.SaveGame
+		i, ok := at[key]
 		if !ok {
-			groups = append(groups, backupGroup{Map: e.Map})
+			groups = append(groups, backupGroup{
+				Map:      e.Map,
+				MapLabel: mapLabel(e.Map),
+				SaveGame: e.SaveGame,
+				DirLabel: dirLabel(e.SaveGame),
+			})
 			i = len(groups) - 1
-			at[e.Map] = i
+			at[key] = i
 		}
 		groups[i].Entries = append(groups[i].Entries, e)
 	}
@@ -351,6 +381,20 @@ func groupBackups(entries []backupEntry) []backupGroup {
 	if len(worldless.Entries) > 0 {
 		groups = append(groups, worldless)
 	}
+
+	// The active save game opens; failing that the first group does, so the page never opens showing
+	// nothing but headers. The worldless group is never the active one and stays folded unless it is
+	// all there is.
+	for i := range groups {
+		if groups[i].SaveGame != "" && activeDir != "" && activeMap != "" &&
+			strings.EqualFold(groups[i].SaveGame, activeDir) && strings.EqualFold(groups[i].Map, activeMap) {
+			groups[i].Open = true
+			return groups
+		}
+	}
+	if len(groups) > 0 {
+		groups[0].Open = true
+	}
 	return groups
 }
 
@@ -361,12 +405,14 @@ func backupsHandler(cfg config) http.HandlerFunc {
 		if err != nil {
 			page.Flash, page.Failed = "Sicherungen nicht lesbar: "+err.Error(), true
 		}
-		page.Groups, page.Any = groupBackups(entries), len(entries) > 0
 		// Unreadable is not fatal here: the listing is still worth showing, it just cannot name the
-		// target of a restore.
+		// target of a restore and cannot tell which group to unfold.
+		var activeMap string
 		if file, err := readInstanceFile(cfg); err == nil {
 			page.SaveGame = file.saveDirOrDefault()
+			activeMap = resolveMap(cfg, file).Value
 		}
+		page.Groups, page.Any = groupBackups(entries, activeMap, page.SaveGame), len(entries) > 0
 		if n := r.URL.Query().Get("restored"); n != "" {
 			page.Flash = n + " Datei(en) zurückgespielt, der Server läuft wieder."
 		}
