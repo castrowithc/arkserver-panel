@@ -32,6 +32,12 @@ type connectInfo struct {
 	Local  string
 	LAN    string
 	Public string
+	// The same three hosts with the query port. Steam's own "add a server" dialog asks over that port
+	// and finds nothing on the game port, so handing out only the game address is what sends someone
+	// looking for a server that is running. Empty when the deployment publishes no query port.
+	LocalQuery  string
+	LANQuery    string
+	PublicQuery string
 	// PublicUnset says the operator has not named the outside address, so the page can say what to
 	// set instead of leaving a gap.
 	PublicUnset bool
@@ -52,19 +58,28 @@ func gatherConnect(cfg config, st containerState, requestHost string) connectInf
 		return connectInfo{}
 	}
 
-	info := connectInfo{GamePort: game, QueryPort: query, Known: true, Local: net.JoinHostPort("127.0.0.1", game)}
+	// Both addresses for one host: the game port to join on, the query port to be found on.
+	addrs := func(host string) (string, string) {
+		if query == "" {
+			return net.JoinHostPort(host, game), ""
+		}
+		return net.JoinHostPort(host, game), net.JoinHostPort(host, query)
+	}
+
+	info := connectInfo{GamePort: game, QueryPort: query, Known: true}
+	info.Local, info.LocalQuery = addrs("127.0.0.1")
 	switch host := hostOnly(requestHost); {
 	case cfg.lanHost != "":
-		info.LAN = net.JoinHostPort(hostOnly(cfg.lanHost), game)
+		info.LAN, info.LANQuery = addrs(hostOnly(cfg.lanHost))
 	case host != "" && !isLoopback(host):
 		// The address the browser used is by definition one that works from where the operator sits.
-		info.LAN = net.JoinHostPort(host, game)
+		info.LAN, info.LANQuery = addrs(host)
 	default:
 		info.LANUnset = true
 	}
 	switch {
 	case cfg.publicHost != "":
-		info.Public = net.JoinHostPort(hostOnly(cfg.publicHost), game)
+		info.Public, info.PublicQuery = addrs(hostOnly(cfg.publicHost))
 	default:
 		info.PublicUnset = true
 	}

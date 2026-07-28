@@ -47,7 +47,20 @@
 
 {{if .Connect.Known}}
 <h2>Verbinden</h2>
+<p class="why">
+  Zwei Adressen je Situation, weil zwei verschiedene Ports gefragt sind: im Spiel wird direkt auf den
+  Spielport verbunden, Steams „Server hinzufügen" fragt dagegen über den Abfrage-Port und findet auf
+  dem Spielport nichts.
+</p>
+<div class="scroll">
 <table class="list">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Im Spiel verbinden</th>
+      <th>In Steam eintragen</th>
+    </tr>
+  </thead>
   <tbody>
     <tr>
       <td>
@@ -55,6 +68,9 @@
         <div class="why">wenn Server und Spiel auf derselben Maschine laufen</div>
       </td>
       <td><code>{{.Connect.Local}}</code></td>
+      <td>
+        {{if .Connect.LocalQuery}}<code>{{.Connect.LocalQuery}}</code>{{else}}<span class="muted">unbekannt</span>{{end}}
+      </td>
     </tr>
     <tr>
       <td>
@@ -73,6 +89,9 @@
       <td>
         {{if .Connect.LAN}}<code>{{.Connect.LAN}}</code>{{else}}<span class="muted">unbekannt</span>{{end}}
       </td>
+      <td>
+        {{if .Connect.LANQuery}}<code>{{.Connect.LANQuery}}</code>{{else}}<span class="muted">unbekannt</span>{{end}}
+      </td>
     </tr>
     <tr>
       <td>
@@ -89,18 +108,24 @@
       <td>
         {{if .Connect.Public}}<code>{{.Connect.Public}}</code>{{else}}<span class="muted">unbekannt</span>{{end}}
       </td>
+      <td>
+        {{if .Connect.PublicQuery}}<code>{{.Connect.PublicQuery}}</code>{{else}}<span class="muted">unbekannt</span>{{end}}
+      </td>
     </tr>
   </tbody>
 </table>
-<details class="hint">
+</div>
+<details class="hint" id="ports">
   <summary>Ports und Erreichbarkeit</summary>
   <p>
-    Der Port ist in allen drei Fällen derselbe, nur die Adresse davor wechselt. Über den Abfrage-Port
-    <code>{{.Connect.QueryPort}}</code> taucht der Server in der Serverliste auf, verbunden wird auf
-    <code>{{.Connect.GamePort}}</code>, und ARK belegt zusätzlich den Spielport plus eins. Im eigenen
-    Netz ist dafür nichts weiter nötig, nur die Firewall dieses Rechners muss die drei Ports
-    hereinlassen. Von außen kommen sie zusätzlich in die Portfreigabe des Routers, beim gemieteten
-    Server in dessen Firewall. Der RCON-Port gehört in keinem Fall dorthin.
+    Die Adresse wechselt je Situation, die beiden Ports bleiben dieselben. In Steam unter Server
+    anzeigen, Favoriten, Server hinzufügen zählt der Abfrage-Port
+    <code>{{.Connect.QueryPort}}</code>; erst darüber taucht der Server in der Liste auf. Verbunden
+    wird danach auf <code>{{.Connect.GamePort}}</code>, und ARK belegt zusätzlich den Spielport plus
+    eins. Im eigenen Netz ist dafür nichts weiter nötig, nur die Firewall dieses Rechners muss die
+    drei Ports hereinlassen, was ein Netzwerkprofil „Öffentlich" unter Windows verhindert. Von außen
+    kommen sie zusätzlich in die Portfreigabe des Routers, beim gemieteten Server in dessen Firewall.
+    Der RCON-Port gehört in keinem Fall dorthin.
   </p>
   <p>
     Dieses Panel selbst ist nur auf diesem Rechner erreichbar, absichtlich. Dass es von einem anderen

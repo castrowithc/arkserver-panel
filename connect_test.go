@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"bytes"
+	"strings"
+	"testing"
+)
 
 // state builds the slice of Docker's container JSON the connect info reads.
 func stateWithPorts(bindings map[string]string) containerState {
@@ -33,6 +37,41 @@ func TestConnectUsesThePublishedPortsNotTheImageDefaults(t *testing.T) {
 	// The address the browser used is by definition one that works from where the operator sits.
 	if info.LAN != "192.168.1.20:17777" {
 		t.Errorf("lan %q", info.LAN)
+	}
+}
+
+func TestConnectAlsoHandsOutTheAddressSteamAsksOver(t *testing.T) {
+	// Steam's add-a-server dialog queries the query port and finds nothing on the game port, so the
+	// page has to offer both addresses rather than leave the reader to swap the number themselves.
+	st := stateWithPorts(map[string]string{gamePortInContainer: "7777", queryPortInContainer: "27015"})
+	info := gatherConnect(config{publicHost: "ark.example.org"}, st, "192.168.1.20:8080")
+	if info.LocalQuery != "127.0.0.1:27015" || info.LANQuery != "192.168.1.20:27015" || info.PublicQuery != "ark.example.org:27015" {
+		t.Errorf("query addresses: local %q, lan %q, public %q", info.LocalQuery, info.LANQuery, info.PublicQuery)
+	}
+
+	// A deployment that publishes no query port has no such address, and the game port is not one.
+	info = gatherConnect(config{}, stateWithPorts(map[string]string{gamePortInContainer: "7777"}), "192.168.1.20:8080")
+	if info.LocalQuery != "" || info.LANQuery != "" {
+		t.Errorf("invented a query address: local %q, lan %q", info.LocalQuery, info.LANQuery)
+	}
+}
+
+// The page itself, because the addresses being right in the struct is not what anyone copies. The
+// router test renders the status page without Docker access, where the whole connect block is
+// skipped, so this is the only place the block is executed at all.
+func TestStatusPageCarriesBothAddresses(t *testing.T) {
+	st := serverStatus{Connect: gatherConnect(config{},
+		stateWithPorts(map[string]string{gamePortInContainer: "7777", queryPortInContainer: "27015"}),
+		"192.168.1.20:8080")}
+
+	var buf bytes.Buffer
+	if err := templates.ExecuteTemplate(&buf, "status", st); err != nil {
+		t.Fatalf("rendering the status page: %v", err)
+	}
+	for _, want := range []string{"192.168.1.20:7777", "192.168.1.20:27015", "127.0.0.1:27015"} {
+		if !strings.Contains(buf.String(), want) {
+			t.Errorf("the page never names %s", want)
+		}
 	}
 }
 

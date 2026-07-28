@@ -17,7 +17,14 @@
       if (document.hidden) return;
       try {
         const html = await (await fetch("/status", { headers: { "Accept": "text/html" } })).text();
+        // The poll replaces the whole fragment, so anything the reader opened would snap shut every
+        // five seconds, right while they are reading it. Carry the open ones over by id.
+        const open = [...status.querySelectorAll("details[id]")].filter(d => d.open).map(d => d.id);
         status.innerHTML = html;
+        for (const id of open) {
+          const d = status.querySelector("details#" + CSS.escape(id));
+          if (d) d.open = true;
+        }
       } catch (e) { /* a missed poll is not worth showing; the next one follows */ }
     }
     setInterval(refresh, 5000);
