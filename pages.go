@@ -525,8 +525,28 @@ type savegamePage struct {
 	// CanSwitch is false without Docker access: the switch is a stop and a start, and nothing else
 	// applies the change.
 	CanSwitch bool
-	Flash     string
-	Failed    bool
+	// People is who lives in each save directory, in the order of Dirs.
+	People []savePeople
+	Flash  string
+	Failed bool
+}
+
+// savePeople is the characters and tribes of one save directory. They belong to the directory and
+// not to a single world: every map in the same directory shares them. That is the whole answer to
+// what a map switch does to a character, so the page groups them the way the files are grouped
+// rather than the way the save-game list is.
+type savePeople struct {
+	Dir      string
+	DirLabel string
+	Active   bool
+	// Maps are the worlds that live in this directory, named so it is clear which characters are
+	// being shared with what.
+	Maps       []string
+	Characters []character
+	Tribes     []tribe
+	// Err is set when the directory itself could not be listed, as opposed to a single file in it
+	// failing, which each entry reports for itself.
+	Err string
 }
 
 func newSavegamePage(cfg config) savegamePage {
@@ -558,7 +578,32 @@ func newSavegamePage(cfg config) savegamePage {
 			page.Dirs = append(page.Dirs, s.Dir)
 		}
 	}
+	page.People = gatherPeople(cfg, page.Dirs, saves, page.SaveDir)
 	return page
+}
+
+// gatherPeople reads the characters and tribes of every save directory. Unreadable is per entry and
+// never fatal: one broken profile must not take the page down, and a directory that cannot be
+// listed at all says so in its own block.
+func gatherPeople(cfg config, dirs []string, saves []saveGame, activeDir string) []savePeople {
+	out := make([]savePeople, 0, len(dirs))
+	for _, dir := range dirs {
+		p := savePeople{Dir: dir, DirLabel: dirLabel(dir), Active: dir == activeDir}
+		for _, s := range saves {
+			if s.Dir == dir {
+				p.Maps = append(p.Maps, s.MapLabel)
+			}
+		}
+		var err error
+		if p.Characters, err = listCharacters(cfg, dir); err != nil {
+			p.Err = err.Error()
+		}
+		if p.Tribes, err = listTribes(cfg, dir); err != nil && p.Err == "" {
+			p.Err = err.Error()
+		}
+		out = append(out, p)
+	}
+	return out
 }
 
 func savegamesHandler(cfg config) http.HandlerFunc {

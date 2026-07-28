@@ -61,7 +61,8 @@
           {{else}}
             <span class="group-name">Ohne Welt-Stand</span>
           {{end}}
-          <span class="group-meta muted">{{len .Entries}} Sicherungen, zuletzt {{.Latest}}</span>
+          <!-- Counting form rather than "N Sicherungen", which reads wrong at exactly one. -->
+          <span class="group-meta muted">Sicherungen: {{len .Entries}} · zuletzt {{.Latest}}</span>
         </summary>
 
         {{if not .Map}}

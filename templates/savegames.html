@@ -163,6 +163,108 @@
         </div>
       </form>
     {{end}}
+
+    <h2>Wer in den Spielständen steckt</h2>
+    <p class="hint">
+      Charaktere und Stämme gehören dem Save-Verzeichnis, nicht der einzelnen Karte: liegen mehrere
+      Welten im selben Verzeichnis, teilen sie sich dieselben Charaktere. Deshalb behält ein
+      Kartenwechsel innerhalb eines Verzeichnisses den Charakter, und nur ein Wechsel des
+      Verzeichnisses gibt einen neuen. Gelesen wird nur; angelegt und gelöscht wird im Spiel.
+    </p>
+
+    {{range .People}}
+      <details class="group" {{if .Active}}open{{end}}>
+        <summary>
+          <span class="group-name">{{.DirLabel}}{{if .Active}} <span class="muted">· geladen</span>{{end}}</span>
+          <span class="group-meta muted">
+            Charaktere: {{len .Characters}} · Stämme: {{len .Tribes}}{{if .Maps}} · {{range $i, $m := .Maps}}{{if $i}}, {{end}}{{$m}}{{end}}{{end}}
+          </span>
+        </summary>
+
+        {{if .Err}}
+          <p class="hint">Verzeichnis nicht lesbar: {{.Err}}</p>
+        {{end}}
+
+        {{if not .Characters}}
+          <p class="hint">Keine Charaktere in diesem Verzeichnis.</p>
+        {{else}}
+          <table class="list">
+            <thead>
+              <tr>
+                <th>Charakter</th>
+                <th>Konto</th>
+                <th>Stufe</th>
+                <th>Erfahrung</th>
+                <th>Engramme</th>
+                <th>Verteilte Punkte</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Characters}}
+                <tr>
+                  {{if .Err}}
+                    <td colspan="6">
+                      <span class="file">{{.File}}</span>
+                      <span class="muted">nicht lesbar: {{.Err}}</span>
+                    </td>
+                  {{else}}
+                    <td>
+                      {{if .Name}}{{.Name}}{{else}}<span class="muted">ohne Namen</span>{{end}}
+                      <span class="file">{{.File}}</span>
+                    </td>
+                    <td>{{if .Account}}{{.Account}}{{else}}<span class="muted">unbekannt</span>{{end}}</td>
+                    <td class="right">{{.Level}}</td>
+                    <td class="right">{{printf "%.0f" .XP}}</td>
+                    <td class="right">{{.EngramPoints}}</td>
+                    <td>
+                      {{if .Stats}}
+                        {{range $i, $s := .Stats}}{{if $i}}, {{end}}{{$s.Stat}} {{$s.Points}}{{end}}
+                      {{else}}
+                        <span class="muted">keine</span>
+                      {{end}}
+                    </td>
+                  {{end}}
+                </tr>
+              {{end}}
+            </tbody>
+          </table>
+        {{end}}
+
+        {{if .Tribes}}
+          <table class="list">
+            <thead>
+              <tr>
+                <th>Stamm</th>
+                <th>Gründer</th>
+                <th>Mitglieder</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Tribes}}
+                <tr>
+                  {{if .Err}}
+                    <td colspan="3">
+                      <span class="file">{{.File}}</span>
+                      <span class="muted">nicht lesbar: {{.Err}}</span>
+                    </td>
+                  {{else}}
+                    <td>{{.Name}}<span class="file">{{.File}}</span></td>
+                    <td>{{if .Owner}}{{.Owner}}{{else}}<span class="muted">unbekannt</span>{{end}}</td>
+                    <td>
+                      {{if .Members}}
+                        {{range $i, $m := .Members}}{{if $i}}, {{end}}{{$m}}{{end}}
+                      {{else}}
+                        <span class="muted">keine genannt</span>
+                      {{end}}
+                    </td>
+                  {{end}}
+                </tr>
+              {{end}}
+            </tbody>
+          </table>
+        {{end}}
+      </details>
+    {{end}}
   </main>
 </body>
 </html>

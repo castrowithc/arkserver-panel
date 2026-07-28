@@ -206,6 +206,60 @@ func TestSavegamesPageNamesWhatIsLoadedAndWhereItComesFrom(t *testing.T) {
 	}
 }
 
+// The rendered page, so the address cannot leak through a template that names a field the reader
+// was careful not to expose.
+func TestSavegamesPageNamesCharactersAndNeverTheirAddress(t *testing.T) {
+	cfg := filesFixture(t)
+	instances := filepath.Dir(instanceCfgPath(cfg))
+	if err := os.MkdirAll(instances, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(instanceCfgPath(cfg), []byte(instanceSample), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cfg.envDir, ".env"), []byte("SERVER_MAP=TheIsland\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// Two save directories, so the page has to show that characters belong to the directory rather
+	// than to the world.
+	for _, s := range []struct {
+		dir, name string
+		level     *uint16
+	}{
+		{savedArksDir, "Alteingesessen", u16p(5)},
+		{"zweite-runde", "Neuanfang", nil},
+	} {
+		dir := filepath.Join(savedRoot(cfg), s.dir)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "TheIsland.ark"), []byte("world"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		writeProfile(t, filepath.Join(dir, "10000000000000001.arkprofile"), profileFixture(t, fixtureChar{
+			account: "TestKonto", name: s.name, extraLevel: s.level, address: "203.0.113.7",
+		}))
+	}
+
+	rec := get(t, newRouter(cfg), "/savegames")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("want 200, got %d", rec.Code)
+	}
+	body := rec.Body.String()
+	if strings.Contains(body, "203.0.113") {
+		t.Error("the network address reached the page")
+	}
+	for _, want := range []string{"Alteingesessen", "Neuanfang", "TestKonto", "zweite-runde"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("the page should name %q", want)
+		}
+	}
+	// The loaded directory is unfolded, the other one is not.
+	if n := strings.Count(body, `class="group" open`); n != 1 {
+		t.Errorf("%d open groups, want only the loaded save directory", n)
+	}
+}
+
 // The page itself, not just the grouping: two save games of one map have to arrive as two foldable
 // groups, and only the one being played may be open. Rendering it here is also what catches a broken
 // template, which the grouping tests alone would not.
